@@ -10,9 +10,9 @@ simulated-noise-rate:  1e-6
 event-time-window:     300, 900
 layer-axis:            Z
 layer-depth:           10
-line-width:            40
+line-width:            22
 seed-size:             3
-event-density-limit:   0.25
+event-density-limit:   0.0001
 
 # Geometry Setup
 geometry-file:                demo/box/resources/world.box.gdml
@@ -28,7 +28,9 @@ x_edge_length:                10000
 y_edge_length:                10000
 
 # Data Setup
-data-directory:            .temp/box_data
+data-directories: ...
+  - .temp/box_data, 0
+
 data-file-extension:       root
 data-position-keys:        Time, X, Y, Z
 data-position-error-keys:  dT, dX, dY, dZ
