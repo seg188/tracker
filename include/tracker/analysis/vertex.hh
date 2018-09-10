@@ -195,7 +195,7 @@ public:
                    chi_squared, chi_squared_per_dof, chi_squared_p_value,
                    size;
 
-  branch<std::vector<uint_fast64_t>> track_hash, hash;
+  branch<std::vector<unsigned long>> track_hash, hash;
 
   void insert(const vertex& vertex);
   void clear();
@@ -214,12 +214,12 @@ public:
     return std::move(f);
   }
 
-  void fill(const vertex_vector& vertices) {
+  void fill(const vertex_vector& vertices={}) {
     fill_if(vertices, [](auto) { return true; });
   }
 
 private:
-  branch<uint_fast64_t> _count;
+  branch<unsigned long long> _count;
   std::vector<std::reference_wrapper<real_branch_type>> _vector_branches;
 };
 //----------------------------------------------------------------------------------------------

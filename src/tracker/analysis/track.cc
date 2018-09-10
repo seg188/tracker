@@ -1064,7 +1064,7 @@ void track::tree::insert(const track& track) {
 
 //__Clear Track Data Tree_______________________________________________________________________
 void track::tree::clear() {
-  _count = 0UL;
+  _count = 0ULL;
   for (auto& entry : _vector_branches)
     entry.get().get().clear();
   event_t.get().clear();
@@ -1188,9 +1188,7 @@ template<class Event,
   typename = std::enable_if_t<is_r4_type_v<typename Event::value_type>>>
 std::size_t _time_ordered_overlap_size(const Event& first,
                                        const Event& second) {
-  return first.front().t <= second.front().t
-    ? _overlap_size(first, second)
-    : _overlap_size(second, first);
+  return first.front().t <= second.front().t ? _overlap_size(first, second) : _overlap_size(second, first);
 }
 //----------------------------------------------------------------------------------------------
 
