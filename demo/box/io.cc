@@ -42,6 +42,7 @@ extension_parser::extension_parser()
       layer_spacing(constants::layer_spacing),
       x_displacement(constants::x_displacement),
       y_displacement(constants::y_displacement),
+      z_displacement(constants::z_displacement),
       x_edge_length(constants::x_edge_length),
       y_edge_length(constants::y_edge_length) {}
 //----------------------------------------------------------------------------------------------
@@ -70,6 +71,12 @@ void extension_parser::operator()(const std::string& key,
   } else if (key == "y_displacement") {
     script::parse_real(key, value, y_displacement);
     y_displacement *= units::length;
+
+  } else if (key == "z_displacement") {
+	  script::parse_real(key, value, z_displacement);
+	  z_displacement *= units::length;
+
+
   } else if (key == "x_edge_length") {
     script::parse_positive_real(key, value, x_edge_length);
     x_edge_length *= units::length;
@@ -105,7 +112,7 @@ void draw_detector(plot::canvas& canvas,
     canvas.add_box(limits.center,
                    limits.max.x - limits.min.x,
                    limits.max.y - limits.min.y,
-                   limits.max.z - limits.min.z,
+				   limits.max.z - limits.min.z,
                    size,
                    color);
   }

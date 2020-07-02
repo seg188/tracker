@@ -20,7 +20,7 @@
 #define TRACKER__HELPER__ANALYSIS_HH
 #pragma once
 
-#include <ROOT/TMinuit.h>
+#include <TMinuit.h>
 
 #include <tracker/analysis.hh>
 

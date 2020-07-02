@@ -20,10 +20,10 @@
 
 #include <unordered_map>
 
-#include <ROOT/TCanvas.h>
-#include <ROOT/TH1D.h>
-#include <ROOT/TFile.h>
-#include <ROOT/TAxis.h>
+#include <TCanvas.h>
+#include <TH1D.h>
+#include <TFile.h>
+#include <TAxis.h>
 
 namespace MATHUSLA { namespace TRACKER {
 

@@ -37,6 +37,21 @@ namespace analysis { ///////////////////////////////////////////////////////////
 namespace { ////////////////////////////////////////////////////////////////////////////////////
 
 //__Calculate Squared Residual of Track wrt Full Hit____________________________________________
+real _timeless_track_squared_residual(const real x0,
+                                      const real y0,
+                                      const real z0,
+                                      const real vx,
+                                      const real vy,
+                                      const real vz,
+                                      const full_hit& point) {
+  const auto dt = (point.z - z0) / vz;
+  const auto x_res = (std::fma(dt, vx, x0) - point.x) / point.width.x;
+  const auto y_res = (std::fma(dt, vy, y0) - point.y) / point.width.y;
+  return 12.0L*x_res*x_res + 12.0L*y_res*y_res;
+}
+//----------------------------------------------------------------------------------------------
+
+//__Calculate Squared Residual of Track wrt Full Hit____________________________________________
 real _track_squared_residual(const real t0,
                              const real x0,
                              const real y0,
@@ -96,6 +111,16 @@ real _vz_from_c(const real vx,
 
 //__Gaussian Negative Log Likelihood Calculation________________________________________________
 thread_local full_event&& _nll_fit_event = {};
+void _timeless_gaussian_nll(Int_t&, Double_t*, Double_t& out, Double_t* x, Int_t) {
+  out = 0.5L * std::accumulate(_nll_fit_event.cbegin(), _nll_fit_event.cend(), 0.0L,
+    [&](const auto sum, const auto& point) {
+      return sum + _timeless_track_squared_residual(x[1], x[2], x[3], x[4], x[5], x[6], point); });
+}
+void _timeless_gaussian_nll_two_hit_track(Int_t&, Double_t*, Double_t& out, Double_t* x, Int_t) {
+  out = 0.5L * std::accumulate(_nll_fit_event.cbegin(), _nll_fit_event.cend(), 0.0L,
+    [&](const auto sum, const auto& point) {
+      return sum + _timeless_track_squared_residual(x[1], x[2], x[3], x[4], x[5], _vz_from_c(x[4], x[5]), point); });
+}
 void _gaussian_nll(Int_t&, Double_t*, Double_t& out, Double_t* x, Int_t) {
   out = 0.5L * std::accumulate(_nll_fit_event.cbegin(), _nll_fit_event.cend(), 0.0L,
     [&](const auto sum, const auto& point) {
@@ -511,7 +536,8 @@ real track::angle_error() const {
 
 //__Chi-Squared Test Statistic__________________________________________________________________
 real track::chi_squared() const {
-  return std::accumulate(_delta_chi2.cbegin(), _delta_chi2.cend(), 0.0L);
+  const auto chi2 = std::accumulate(_delta_chi2.cbegin(), _delta_chi2.cend(), 0.0L);
+  return chi2 > 0 ? chi2 : -1.0;
 }
 //----------------------------------------------------------------------------------------------
 
@@ -991,35 +1017,36 @@ track::tree::tree(const std::string& name)
 track::tree::tree(const std::string& name,
                   const std::string& title)
     : analysis::tree(name, title),
-      t0(emplace_branch<real_branch_value_type>("t0")),
-      x0(emplace_branch<real_branch_value_type>("x0")),
-      y0(emplace_branch<real_branch_value_type>("y0")),
-      z0(emplace_branch<real_branch_value_type>("z0")),
-      vx(emplace_branch<real_branch_value_type>("vx")),
-      vy(emplace_branch<real_branch_value_type>("vy")),
-      vz(emplace_branch<real_branch_value_type>("vz")),
-      t0_error(emplace_branch<real_branch_value_type>("t0_error")),
-      x0_error(emplace_branch<real_branch_value_type>("x0_error")),
-      y0_error(emplace_branch<real_branch_value_type>("y0_error")),
-      z0_error(emplace_branch<real_branch_value_type>("z0_error")),
-      vx_error(emplace_branch<real_branch_value_type>("vx_error")),
-      vy_error(emplace_branch<real_branch_value_type>("vy_error")),
-      vz_error(emplace_branch<real_branch_value_type>("vz_error")),
-      chi_squared(emplace_branch<real_branch_value_type>("chi_squared")),
-      chi_squared_per_dof(emplace_branch<real_branch_value_type>("chi_squared_per_dof")),
-      chi_squared_p_value(emplace_branch<real_branch_value_type>("chi_squared_p_value")),
-      size(emplace_branch<real_branch_value_type>("size")),
-      beta(emplace_branch<real_branch_value_type>("beta")),
-      beta_error(emplace_branch<real_branch_value_type>("beta_error")),
-      angle(emplace_branch<real_branch_value_type>("angle")),
-      angle_error(emplace_branch<real_branch_value_type>("angle_error")),
-      event_t(emplace_branch<real_branch_value_type>("event_t")),
-      event_x(emplace_branch<real_branch_value_type>("event_x")),
-      event_y(emplace_branch<real_branch_value_type>("event_y")),
-      event_z(emplace_branch<real_branch_value_type>("event_z")),
+      t0(emplace_branch<real_branch_value_type>("track_t0")),
+      x0(emplace_branch<real_branch_value_type>("track_x0")),
+      y0(emplace_branch<real_branch_value_type>("track_y0")),
+      z0(emplace_branch<real_branch_value_type>("track_z0")),
+      vx(emplace_branch<real_branch_value_type>("track_vx")),
+      vy(emplace_branch<real_branch_value_type>("track_vy")),
+      vz(emplace_branch<real_branch_value_type>("track_vz")),
+      t0_error(emplace_branch<real_branch_value_type>("track_t0_error")),
+      x0_error(emplace_branch<real_branch_value_type>("track_x0_error")),
+      y0_error(emplace_branch<real_branch_value_type>("track_y0_error")),
+      z0_error(emplace_branch<real_branch_value_type>("track_z0_error")),
+      vx_error(emplace_branch<real_branch_value_type>("track_vx_error")),
+      vy_error(emplace_branch<real_branch_value_type>("track_vy_error")),
+      vz_error(emplace_branch<real_branch_value_type>("track_vz_error")),
+      chi_squared(emplace_branch<real_branch_value_type>("track_chi_squared")),
+      chi_squared_per_dof(emplace_branch<real_branch_value_type>("track_chi_squared_per_dof")),
+      chi_squared_p_value(emplace_branch<real_branch_value_type>("track_chi_squared_p_value")),
+      size(emplace_branch<real_branch_value_type>("track_N_hits")),
+      beta(emplace_branch<real_branch_value_type>("track_beta")),
+      beta_error(emplace_branch<real_branch_value_type>("track_beta_error")),
+      angle(emplace_branch<real_branch_value_type>("track_angle")),
+      angle_error(emplace_branch<real_branch_value_type>("track_angle_error")),
+      event_t(emplace_branch<real_branch_value_type>("track_event_t")),
+      event_x(emplace_branch<real_branch_value_type>("track_event_x")),
+      event_y(emplace_branch<real_branch_value_type>("track_event_y")),
+      event_z(emplace_branch<real_branch_value_type>("track_event_z")),
       event_detector(emplace_branch<decltype(event_detector)::value_type>("event_detector")),
+      unique_detector_count(emplace_branch<decltype(unique_detector_count)::value_type>("unique_detector_count")),
       hash(emplace_branch<decltype(hash)::value_type>("hash")),
-      _count(emplace_branch<decltype(_count)::value_type>("N")),
+      _count(emplace_branch<decltype(_count)::value_type>("track_N_per_event")),
       _vector_branches({t0, x0, y0, z0, vx, vy, vz,
                         t0_error, x0_error, y0_error, z0_error, vx_error, vy_error, vz_error,
                         chi_squared, chi_squared_per_dof, chi_squared_p_value,
@@ -1050,6 +1077,7 @@ void track::tree::insert(const track& track) {
   beta_error.get().push_back(track.beta_error());
   angle.get().push_back(track.angle());
   angle_error.get().push_back(track.angle_error());
+
   for (const auto& point : track) {
     event_t.get().push_back(point.t / units::time);
     event_x.get().push_back(point.x / units::length);
@@ -1057,6 +1085,12 @@ void track::tree::insert(const track& track) {
     event_z.get().push_back(point.z / units::length);
     event_detector.get().push_back(geometry::volume(reduce_to_r3(point)));
   }
+
+  geometry::structure_vector unique_geometry;
+  const auto detectors = track.detectors();
+  std::unique_copy(detectors.cbegin(), detectors.cend(), std::back_inserter(unique_geometry));
+  unique_detector_count.get().push_back(unique_geometry.size());
+
   hash.get().push_back(track.hash());
   ++_count;
 }
@@ -1072,6 +1106,7 @@ void track::tree::clear() {
   event_y.get().clear();
   event_z.get().clear();
   event_detector.get().clear();
+  unique_detector_count.get().clear();
   hash.get().clear();
 }
 //----------------------------------------------------------------------------------------------

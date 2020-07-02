@@ -18,7 +18,7 @@
 
 #include <tracker/plot.hh>
 
-#include <ROOT/TApplication.h>
+#include <TApplication.h>
 
 #include "../helper/root.hh"
 

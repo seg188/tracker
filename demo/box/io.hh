@@ -49,6 +49,7 @@ struct extension_parser {
   type::real layer_spacing;
   type::real x_displacement;
   type::real y_displacement;
+  type::real z_displacement;
   type::real x_edge_length;
   type::real y_edge_length;
 

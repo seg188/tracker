@@ -18,8 +18,8 @@
 
 #include <tracker/analysis/tree.hh>
 
-#include <ROOT/TFile.h>
-#include <ROOT/TTree.h>
+#include <TFile.h>
+#include <TTree.h>
 
 // TODO: improve this dependency
 #include "../helper/root.hh"
@@ -61,11 +61,16 @@ struct tree::impl {
        const std::string& title) : _tree(new TTreeType(name.c_str(), title.c_str())) {}
   impl(const impl& other) : _tree(to_tree(other._tree->CloneTree())) {}
   impl(impl&& other) noexcept = default;
-  ~impl() = default;
+  ~impl() {
+    if (_file)
+      _file->Close();
+  }
 
   impl& operator=(const impl& other) {
-    if (this != &other)
+    if (this != &other) {
       _tree = to_tree(other._tree->CloneTree());
+      _file = other._file;
+    }
     return *this;
   }
   impl& operator=(impl&& other) noexcept = default;
@@ -221,6 +226,26 @@ std::size_t tree::count(const key_type& key) const {
 //__Fill Tree___________________________________________________________________________________
 void tree::fill() {
   _impl->_tree->Fill();
+}
+//----------------------------------------------------------------------------------------------
+
+//__Set AutoSave Tree___________________________________________________________________________
+void tree::set_auto_save(const long long bytes) {
+  _impl->_tree->SetAutoSave(bytes);
+}
+//----------------------------------------------------------------------------------------------
+
+//__Set Directory for Tree______________________________________________________________________
+void tree::set_directory(const std::string& path, const std::string& name) {
+  _impl->set_directory(new TDirectory(name.c_str(), path.c_str()));
+}
+//----------------------------------------------------------------------------------------------
+
+//__Set Fire for Tree___________________________________________________________________________
+void tree::set_file(const std::string& path, const std::string& mode) {
+  auto file = TFile::Open(path.c_str(), mode.c_str());
+  file->cd();
+  _impl->set_file(file);
 }
 //----------------------------------------------------------------------------------------------
 

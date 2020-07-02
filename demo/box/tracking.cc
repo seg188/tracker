@@ -110,6 +110,8 @@ void track_event_bundle(const script::path_vector& paths,
 
   analysis::track::tree track_tree{"track_tree", "MATHUSLA Track Tree"};
   analysis::vertex::tree vertex_tree{"vertex_tree", "MATHUSLA Vertex Tree"};
+  // track_tree.set_file(save_path);
+  // vertex_tree.set_file(save_path);
   track_tree.add_friend(vertex_tree, "vertex");
   vertex_tree.add_friend(track_tree, "track");
 
@@ -147,7 +149,9 @@ void track_event_bundle(const script::path_vector& paths,
       canvas_title.insert(canvas_title.cend(), path.begin(), path.end());
     }
 
-    plot::canvas canvas("event" + event_counter_string, canvas_title + " | " + event_counter_string);
+    plot::canvas canvas("event" + event_counter_string,
+                        canvas_title + " | " + event_counter_string,
+                        !options.verbose_output);
     if (options.draw_events) {
       box::io::draw_detector(canvas, extension.layer_count);
       box::io::draw_mc_tracks(canvas, mc::convert_events(mc_imported_events[event_counter]));
@@ -237,11 +241,14 @@ int box_tracking(int argc,
       options,
       extension,
       statistics_save_path);
+
+    std::cout << "\n\nSaved: " << statistics_save_path << "\n";
   }
 
   box::io::print_bar();
   geometry::close();
   plot::end();
+  std::cout << "Completed.\n";
   return 0;
 }
 //----------------------------------------------------------------------------------------------

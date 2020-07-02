@@ -1,0 +1,49 @@
+### MATHUSLA Box TRACKING INPUT CARD ###
+
+# debug-mode: true
+
+verbose-output: true
+draw-events: false
+
+# Thresholds and Settings
+time-smearing:         true
+simulated-efficiency:  1
+simulated-noise-rate:  0
+event-time-window:     450, 750
+layer-axis:            Z
+layer-depth:           10
+line-width:            25
+seed-size:             3
+event-density-limit:   0.000001
+
+# Geometry Setup
+geometry-file:                demo/box/resources/world.box.gdml
+geometry-default-time-error:  1.5
+layer-count:                  5
+scintillator_x_width:         2
+scintillator_y_width:         2
+scintillator_height:          1
+layer_spacing:                150
+x_displacement:               10000
+y_displacement:              -5000
+x_edge_length:                10000
+y_edge_length:                10000
+
+# Data Setup
+data-directories: ...
+  - /uscms/home/agarabag/nobackup/MATHUSLA/simulations/muon/pythia/box/old_geom, 0
+
+data-file-extension:       root
+data-position-keys:        Time, X, Y, Z
+data-position-error-keys:  dT, dX, dY, dZ
+data-detector-key:         Detector
+data-track-id-key:         Track
+data-parent-id-key:        Parent
+data-momentum-keys:        E, PX, PY, PZ
+
+# Statistics Setup
+statistics-directory:       /uscms/home/agarabag/nobackup/MATHUSLA/tracker_output/muon/range/
+statistics-file-prefix:     statistics
+statistics-file-extension:  root
+# merge-output-trees:         true
+merge-input:                false

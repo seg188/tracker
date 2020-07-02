@@ -20,9 +20,12 @@
 
 #include <tracker/util/string.hh>
 
+#include <iostream>
+
 namespace MATHUSLA {
 
 namespace box { ////////////////////////////////////////////////////////////////////////////////
+
 
 //__Default Geometry Components_________________________________________________________________
 std::size_t geometry::layer_count = constants::layer_count;
@@ -32,6 +35,7 @@ type::real geometry::scintillator_height = constants::scintillator_height;
 type::real geometry::layer_spacing = constants::layer_spacing;
 type::real geometry::x_displacement = constants::x_displacement;
 type::real geometry::y_displacement = constants::y_displacement;
+type::real geometry::z_displacement = constants::z_displacement;
 type::real geometry::x_edge_length = constants::x_edge_length;
 type::real geometry::y_edge_length = constants::y_edge_length;
 //----------------------------------------------------------------------------------------------
@@ -56,10 +60,14 @@ type::real geometry::total_count() {
 
 //__Index Triple Constructor____________________________________________________________________
 geometry::index_triple::index_triple(const type::r3_point point) {
-  const auto local_position = point - type::r3_point{x_displacement, y_displacement, 0.0L};
-  x = static_cast<std::size_t>(std::floor(+local_position.x / scintillator_x_width));
-  y = static_cast<std::size_t>(std::floor(+local_position.y / scintillator_y_width));
+  const auto local_position = point - type::r3_point{x_displacement, y_displacement, z_displacement};
+  x = static_cast<std::size_t>(std::floor(+local_position.x / (500.0L*units::cm)  ));
+  y = static_cast<std::size_t>(std::floor(+local_position.y / (5.0L*units::cm)  ));
   z = 1UL + static_cast<std::size_t>(std::floor(-local_position.z / (layer_spacing + scintillator_height)));
+  //z = local_position.z<0 ? 1UL + static_cast<std::size_t>(std::floor(-(local_position.z) / (layer_spacing + scintillator_height))) : 1UL + static_cast<std::size_t>(std::floor(local_position.z / (layer_spacing + scintillator_height)));
+  std::cout << "x: " << x << "::::" << "y: " << y << "z: " << z << "::::" << "local_position: " << local_position << std::endl;
+
+  //  std::cout << "sx: " << scintillator_x_width << "::::" << "sy: " << scintillator_y_width << "::::" << "ls: " << layer_spacing + scintillator_height << ":::::" << "z_displacement: " << z_displacement << std::endl;
 }
 //----------------------------------------------------------------------------------------------
 
@@ -71,18 +79,20 @@ geometry::index_triple::index_triple(const std::string& name,
   x = std::stoul(tokens[1]);
   y = std::stoul(tokens[2]);
   z = std::stoul(tokens[0]);
+  //std::cout << "z: " << z << std::endl;
 }
 //----------------------------------------------------------------------------------------------
 
 //__Limits of Index Triple Volume_______________________________________________________________
 const tracker_geometry::box_volume geometry::index_triple::limits() const {
   tracker_geometry::box_volume out;
-  out.min.x = x_displacement + scintillator_x_width * x;
+  out.min.x = x_displacement + ((500.0L*units::cm) * x);
   out.max.x = out.min.x + scintillator_x_width;
-  out.min.y = y_displacement + scintillator_y_width * y;
+  out.min.y = y_displacement + ((5.0L*units::cm) * y);
   out.max.y = out.min.y + scintillator_y_width;
-  out.max.z = -(scintillator_height + layer_spacing) * (z - 1UL);
-  out.min.z = out.max.z - scintillator_height;
+  out.max.z = (-(scintillator_height + layer_spacing) * (z - 1UL)) + z_displacement;
+  //out.max.z = (z!=1 || z!=2) ? (-(scintillator_height + layer_spacing) * (z - 1UL)) + z_displacement :  ((scintillator_height + layer_spacing) * (z - 1UL)) + z_displacement;
+  out.min.z = out.max.z + scintillator_height;
   out.center = 0.5L * (out.min + out.max);
   return out;
 }
@@ -127,6 +137,7 @@ void _add_layers(const std::size_t begin,
                  std::vector<tracker_geometry::structure_vector>& layers) {
   for (std::size_t z{}; z < end; ++z)
     layers.push_back(_make_layer(z + begin, x_count, y_count));
+
 }
 //----------------------------------------------------------------------------------------------
 
@@ -252,6 +263,7 @@ const plot::value_tag_vector geometry::value_tags() {
     {"LAYER_SPACING",        std::to_string(layer_spacing        / units::length) + " " + units::length_string},
     {"X_DISPLACEMENT",       std::to_string(x_displacement       / units::length) + " " + units::length_string},
     {"Y_DISPLACEMENT",       std::to_string(y_displacement       / units::length) + " " + units::length_string},
+	{"Z_DISPLACEMENT",       std::to_string(z_displacement       / units::length) + " " + units::length_string},
     {"X_EDGE_LENGTH",        std::to_string(x_edge_length        / units::length) + " " + units::length_string},
     {"Y_EDGE_LENGTH",        std::to_string(y_edge_length        / units::length) + " " + units::length_string}
   };

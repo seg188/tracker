@@ -18,7 +18,7 @@
 
 #include <tracker/core/stat.hh>
 
-#include <ROOT/Math/ProbFunc.h>
+#include <Math/ProbFunc.h>
 
 namespace MATHUSLA { namespace TRACKER {
 

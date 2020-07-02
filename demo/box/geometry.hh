@@ -37,28 +37,38 @@ namespace box { ////////////////////////////////////////////////////////////////
 namespace constants { //////////////////////////////////////////////////////////////////////////
 
 static const auto scintillator_time_resolution  = 1.5L*units::ns;
-
-static const auto x_edge_length                 = 100.00L*units::m;
-static const auto y_edge_length                 = 100.00L*units::m;
-static const auto x_displacement                = 100.00L*units::m;
-static const auto y_displacement                = -50.00L*units::m;
+	
+static const auto x_edge_length                 = 90.00L*units::m;
+static const auto y_edge_length                 = 90.00L*units::m;
+static const auto x_displacement                = 70.00L*units::m;
+static const auto y_displacement                = -49.50L*units::m;
+static const auto z_displacement                = 20L*units::m;
 static const auto steel_height                  =   3.00L*units::cm;
-static const auto air_gap                       =  20.00L*units::m;
-static const auto scintillator_x_width          =   0.25L*units::m;
-static const auto scintillator_y_width          =   0.25L*units::m;
-static const auto scintillator_height           =   1.00L*units::cm;
-static const auto scintillator_casing_thickness =   0.10L*units::cm;
 
-static const auto layer_spacing                 = 1.50L*units::m;
-static const auto layer_count                   = 5UL;
+static const auto air_gap                       =  20.00L*units::m;
+
+static const auto scintillator_x_width          =   4.5L*units::m;
+static const auto scintillator_y_width          =   0.045L*units::m;
+static const auto scintillator_height           =   0.02L*units::m;
+static const auto scintillator_casing_thickness =   0.005L*units::m;
+
+static const auto layer_spacing                 = 1.0L*units::m;
+static const auto layer_count                   = 7UL;
+	
+static const auto full_layer_height = scintillator_height + 2*scintillator_casing_thickness;
+static const auto full_module_height =  25.0L*units::m + 5.0*(full_layer_height) + 4.0*layer_spacing;
+
+
 static const auto x_total_count                 = static_cast<std::size_t>(std::ceil(x_edge_length / scintillator_x_width));
 static const auto y_total_count                 = static_cast<std::size_t>(std::ceil(y_edge_length / scintillator_y_width));
 static const auto total_count                   = x_total_count * y_total_count * layer_count;
 
 static const auto half_x_edge_length            = 0.5L * x_edge_length;
 static const auto half_y_edge_length            = 0.5L * y_edge_length;
-static const auto full_detector_height          = steel_height + layer_count * (layer_spacing + scintillator_height) - layer_spacing;
+	//static const auto full_detector_height          = steel_height + layer_count * (layer_spacing + scintillator_height) - layer_spacing;
+static const auto full_detector_height          = full_module_height;
 static const auto half_detector_height          = 0.5L * full_detector_height;
+
 
 } /* namespace constants */ ////////////////////////////////////////////////////////////////////
 
@@ -71,6 +81,7 @@ struct geometry {
   static type::real layer_spacing;
   static type::real x_displacement;
   static type::real y_displacement;
+  static type::real z_displacement;
   static type::real x_edge_length;
   static type::real y_edge_length;
 
@@ -87,6 +98,7 @@ struct geometry {
     layer_spacing = g.layer_spacing;
     x_displacement = g.x_displacement;
     y_displacement = g.y_displacement;
+    z_displacement = g.z_displacement;
     x_edge_length = g.x_edge_length;
     y_edge_length = g.y_edge_length;
   }
