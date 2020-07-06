@@ -34,12 +34,12 @@ data-directories: ...
   - .temp/box_data, 0
 
 data-file-extension:       root
-data-position-keys:        Time, X, Y, Z
+data-position-keys:        Hit_time, Hit_x, Hit_y, Hit_z
 data-position-error-keys:  dT, dX, dY, dZ
-data-detector-key:         Detector
-data-track-id-key:         Track
-data-parent-id-key:        Parent
-data-momentum-keys:        E, PX, PY, PZ
+data-detector-key:         Hit_detId
+data-track-id-key:         Hit_G4TrackId
+data-parent-id-key:        Hit_G4ParentTrackId
+data-momentum-keys:        Hit_particleEnergy, Hit_particlePx, Hit_particlePy, Hit_particlePz
 
 # Statistics Setup
 statistics-directory:       .temp/box_stat

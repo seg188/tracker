@@ -122,8 +122,16 @@ void track_event_bundle(const script::path_vector& paths,
     const auto event_size = event.size();
     const auto event_counter_string = std::to_string(event_counter);
 
-    const auto compressed_event = options.time_smearing ? mc::time_smear<box::geometry>(mc::compress<box::geometry>(event))
-                                                        : mc::compress<box::geometry>(event);
+	// const auto compressed_event = options.time_smearing ? mc::time_smear<box::geometry>(mc::compress<box::geometry>(event))
+    //                                                     : mc::compress<box::geometry>(event);
+
+	const auto compressed_event_t = options.time_smearing ? mc::time_smear<box::geometry>(mc::compress<box::geometry>(event))
+	   	                                                  : mc::compress<box::geometry>(event);
+
+	const auto compressed_event = options.positionx_smearing ? mc::positionx_smear<box::geometry>(compressed_event_t)
+		                                                     : compressed_event_t;
+
+
     const auto compression_size = event_size / static_cast<type::real>(compressed_event.size());
 
     if (event_size == 0UL || compression_size == event_size) {

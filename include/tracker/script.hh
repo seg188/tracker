@@ -73,6 +73,7 @@ struct tracking_options {
   bool         merge_input                = false;
 
   bool         time_smearing              = true;
+  bool         positionx_smearing         = true;
   real         simulated_efficiency       = 1;
   real         simulated_noise_rate       = 0;
   real_range   event_time_window          = {0, 0};
@@ -329,6 +330,8 @@ const tracking_options read(const path_type& path,
         out.default_time_error *= units::time;
       } else if (key == "time-smearing") {
         parse_boolean(key, value, out.time_smearing);
+      } else if (key == "positionx-smearing") {
+		  parse_boolean(key, value, out.positionx_smearing);
       } else if (key == "simulated-efficiency") {
         parse_positive_real(key, value, out.simulated_efficiency);
       } else if (key == "simulated-noise-rate") {

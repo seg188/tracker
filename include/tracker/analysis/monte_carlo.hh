@@ -32,6 +32,8 @@
 #include <tracker/util/index_vector.hh>
 #include <tracker/geometry.hh>
 
+#include <tracker/core/units.hh>
+
 namespace MATHUSLA { namespace TRACKER {
 
 namespace analysis { namespace mc { ////////////////////////////////////////////////////////////
@@ -236,6 +238,26 @@ const Event time_smear(const Event& points) {
 }
 //----------------------------------------------------------------------------------------------
 
+//__Smear Points.x______________________________________________________________________________
+template<class Geometry,
+		 class Event,
+  typename = std::enable_if_t<is_r4_type_v<typename Event::value_type>>>
+const Event positionx_smear(const Event& points) {
+  Event out;
+  out.reserve(points.size());
+
+  util::algorithm::back_insert_transform(points, out, [&](auto hit) {
+    using namespace stat;
+	static auto current_error = 15 * units::length;
+	static random::generator gen(random::normal(0.0L, current_error));
+
+	hit.x += gen;
+	return hit;
+  });
+
+  return x_sort(out);
+}
+
 //__Simulate the Detector Efficiency____________________________________________________________
 template<class Event,
   typename = std::enable_if_t<is_r4_type_v<typename Event::value_type>>>
@@ -432,6 +454,19 @@ const analysis::full_event time_smear(const analysis::full_event& points) {
   return detail::time_smear<Geometry, analysis::full_event>(points);
 }
 //----------------------------------------------------------------------------------------------
+
+//__Points.x Smear______________________________________________________________________________
+template<class Geometry=void>
+const analysis::event positionx_smear(const analysis::event& points) {
+  return detail::positionx_smear<Geometry, analysis::event>(points);
+}
+template<class Geometry=void>
+const analysis::full_event positionx_smear(const analysis::full_event& points) {
+  return detail::positionx_smear<Geometry, analysis::full_event>(points);
+}
+//----------------------------------------------------------------------------------------------
+
+
 
 //__Simulate the Detector Efficiency____________________________________________________________
 inline const analysis::event use_efficiency(const analysis::event& points,

@@ -65,8 +65,7 @@ geometry::index_triple::index_triple(const type::r3_point point) {
   y = static_cast<std::size_t>(std::floor(+local_position.y / (5.0L*units::cm)  ));
   z = 1UL + static_cast<std::size_t>(std::floor(-local_position.z / (layer_spacing + scintillator_height)));
   //z = local_position.z<0 ? 1UL + static_cast<std::size_t>(std::floor(-(local_position.z) / (layer_spacing + scintillator_height))) : 1UL + static_cast<std::size_t>(std::floor(local_position.z / (layer_spacing + scintillator_height)));
-  std::cout << "x: " << x << "::::" << "y: " << y << "z: " << z << "::::" << "local_position: " << local_position << std::endl;
-
+  //  std::cout << "x: " << x << "::::" << "y: " << y << "z: " << z << "::::" << "local_position: " << local_position << std::endl;
   //  std::cout << "sx: " << scintillator_x_width << "::::" << "sy: " << scintillator_y_width << "::::" << "ls: " << layer_spacing + scintillator_height << ":::::" << "z_displacement: " << z_displacement << std::endl;
 }
 //----------------------------------------------------------------------------------------------
