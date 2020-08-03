@@ -10,7 +10,7 @@ time-smearing:         true
 simulated-efficiency:  1 # 0.9
 simulated-noise-rate:  0 # 1e-6
 event-time-window:     450, 750
-layer-axis:            Z
+layer-axis:            Y # Z
 layer-depth:           10
 line-width:            25
 seed-size:             3

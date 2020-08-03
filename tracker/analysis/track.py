@@ -56,11 +56,11 @@ __all__ = (
 
 def track_squared_residual(self, t0, x0, y0, z0, vx, vy, vz, point):
     """Track Squared Residual Definition. (ONLY for Z0 Fixed)."""
-    dt = (point.z.n - z0.n) / vz.n
+    dt = (point.y.n - y0.n) / vy.n
     t_residual = (dt + t0.n - point.t.n) / point.t.s
+    z_residual = (dt * vz.n + z0.n - point.z.n) / point.z.s
     x_residual = (dt * vx.n + x0.n - point.x.n) / point.x.s
-    y_residual = (dt * vy.n + y0.n - point.y.n) / point.y.s
-    return t_residual ** 2.0 + 12.0 * x_residual ** 2.0 + 12.0 * y_residual ** 2.0
+    return t_residual ** 2.0 + 12.0 * z_residual ** 2.0 + 12.0 * x_residual ** 2.0
 
 
 def gaussian_nll(self, points, t0, x0, y0, z0, vx, vy, vz):

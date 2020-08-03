@@ -73,7 +73,7 @@ struct tracking_options {
   bool         merge_input                = false;
 
   bool         time_smearing              = true;
-  bool         positionx_smearing         = true;
+  bool         positionz_smearing         = true;
   real         simulated_efficiency       = 1;
   real         simulated_noise_rate       = 0;
   real_range   event_time_window          = {0, 0};
@@ -136,6 +136,16 @@ void parse_data_keys(const std::string& key,
                      std::string& y_key,
                      std::string& z_key,
                      bool exit_on_error=true);
+//----------------------------------------------------------------------------------------------
+
+//__Parse Data Key Value Pair___________________________________________________________________
+void parse_data_energy_keys(const std::string& key,
+					 const std::string& value,
+					 std::string& e_key,
+					 std::string& px_key,
+					 std::string& py_key,
+					 std::string& pz_key,
+					 bool exit_on_error=true);
 //----------------------------------------------------------------------------------------------
 
 //__Parse Boolean Key Value_____________________________________________________________________
@@ -323,15 +333,15 @@ const tracking_options read(const path_type& path,
       } else if (key == "data-parent-id-key") {
         out.data_parent_id_key = value;
       } else if (key == "data-momentum-keys") {
-        parse_data_keys(key, value,
+        parse_data_energy_keys(key, value,
           out.data_e_key, out.data_px_key, out.data_py_key, out.data_pz_key);
       } else if (key == "geometry-default-time-error") {
         parse_positive_real(key, value, out.default_time_error);
         out.default_time_error *= units::time;
       } else if (key == "time-smearing") {
         parse_boolean(key, value, out.time_smearing);
-      } else if (key == "positionx-smearing") {
-		  parse_boolean(key, value, out.positionx_smearing);
+      } else if (key == "positionz-smearing") {
+		  parse_boolean(key, value, out.positionz_smearing);
       } else if (key == "simulated-efficiency") {
         parse_positive_real(key, value, out.simulated_efficiency);
       } else if (key == "simulated-noise-rate") {

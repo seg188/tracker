@@ -76,6 +76,7 @@ class ScriptOptions:
     merge_input: bool = False
 
     time_smearing: bool = True
+    positionz_smearing: bool = True
     simulated_efficiency: float = 1
     simulated_noise_rate: float = 0
     event_time_window: Tuple[float, float] = field(default=(0, 0))

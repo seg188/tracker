@@ -44,10 +44,10 @@ real _timeless_track_squared_residual(const real x0,
                                       const real vy,
                                       const real vz,
                                       const full_hit& point) {
-  const auto dt = (point.z - z0) / vz;
+  const auto dt = (point.y - y0) / vy;
+  const auto z_res = (std::fma(dt, vz, z0) - point.z) / point.width.z;
   const auto x_res = (std::fma(dt, vx, x0) - point.x) / point.width.x;
-  const auto y_res = (std::fma(dt, vy, y0) - point.y) / point.width.y;
-  return 12.0L*x_res*x_res + 12.0L*y_res*y_res;
+  return 12.0L*z_res*z_res + 12.0L*x_res*x_res;
 }
 //----------------------------------------------------------------------------------------------
 
@@ -60,11 +60,11 @@ real _track_squared_residual(const real t0,
                              const real vy,
                              const real vz,
                              const full_hit& point) {
-  const auto dt = (point.z - z0) / vz;
+  const auto dt = (point.y - y0) / vy;
   const auto t_res = (dt + t0              - point.t) / point.width.t;
+  const auto z_res = (std::fma(dt, vz, z0) - point.z) / point.width.z;
   const auto x_res = (std::fma(dt, vx, x0) - point.x) / point.width.x;
-  const auto y_res = (std::fma(dt, vy, y0) - point.y) / point.width.y;
-  return t_res*t_res + 12.0L*x_res*x_res + 12.0L*y_res*y_res;
+  return t_res*t_res + 12.0L*z_res*z_res + 12.0L*x_res*x_res;
 }
 //----------------------------------------------------------------------------------------------
 
@@ -102,10 +102,10 @@ track::fit_parameters _guess_track(const full_event& points) {
 //----------------------------------------------------------------------------------------------
 
 //__Fix V to be C_______________________________________________________________________________
-real _vz_from_c(const real vx,
-                const real vy) {
+real _vy_from_c(const real vz,
+                const real vx) {
   static constexpr const auto c2 = units::speed_of_light * units::speed_of_light;
-  return std::sqrt(c2 - vx * vx - vy * vy);
+  return std::sqrt(c2 - vz * vz - vx * vx);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -119,7 +119,7 @@ void _timeless_gaussian_nll(Int_t&, Double_t*, Double_t& out, Double_t* x, Int_t
 void _timeless_gaussian_nll_two_hit_track(Int_t&, Double_t*, Double_t& out, Double_t* x, Int_t) {
   out = 0.5L * std::accumulate(_nll_fit_event.cbegin(), _nll_fit_event.cend(), 0.0L,
     [&](const auto sum, const auto& point) {
-      return sum + _timeless_track_squared_residual(x[1], x[2], x[3], x[4], x[5], _vz_from_c(x[4], x[5]), point); });
+      return sum + _timeless_track_squared_residual(x[1], x[2], x[3], x[4], _vy_from_c(x[6], x[4]), x[6], point); });
 }
 void _gaussian_nll(Int_t&, Double_t*, Double_t& out, Double_t* x, Int_t) {
   out = 0.5L * std::accumulate(_nll_fit_event.cbegin(), _nll_fit_event.cend(), 0.0L,
@@ -129,7 +129,7 @@ void _gaussian_nll(Int_t&, Double_t*, Double_t& out, Double_t* x, Int_t) {
 void _gaussian_nll_two_hit_track(Int_t&, Double_t*, Double_t& out, Double_t* x, Int_t) {
   out = 0.5L * std::accumulate(_nll_fit_event.cbegin(), _nll_fit_event.cend(), 0.0L,
     [&](const auto sum, const auto& point) {
-      return sum + _track_squared_residual(x[0], x[1], x[2], x[3], x[4], x[5], _vz_from_c(x[4], x[5]), point); });
+      return sum + _track_squared_residual(x[0], x[1], x[2], x[3], x[4], _vy_from_c(x[6], x[4]), x[6], point); });
 }
 //----------------------------------------------------------------------------------------------
 
@@ -172,18 +172,18 @@ bool _fit_event_minuit(const full_event& points,
   get_covariance<track::free_parameter_count>(minuit, covariance_matrix);
 
   if (points.size() == 2UL) {
-    vz.value = _vz_from_c(vx.value, vy.value);
+    vy.value = _vy_from_c(vz.value, vx.value);
 
     for (std::size_t i{}; i < 5UL; ++i) {
       covariance_matrix[30UL + i] = 0.0L;
       covariance_matrix[6UL * i + 5UL] = 0.0L;
     }
 
-    vz.error = stat::error::propagate(
-      real_array<2UL>{-vx.value / vz.value, -vy.value / vz.value},
-      real_array<4UL>{vx.error * vx.error, covariance_matrix[22UL],
-                      covariance_matrix[22UL], vy.error * vy.error});
-    covariance_matrix[35UL] = vz.error * vz.error;
+    vy.error = stat::error::propagate(
+      real_array<2UL>{-vz.value / vy.value, -vx.value / vy.value},
+      real_array<4UL>{vz.error * vz.error, covariance_matrix[22UL],
+                      covariance_matrix[22UL], vx.error * vx.error});
+    covariance_matrix[35UL] = vy.error * vy.error;
   }
 
   return true;
@@ -853,16 +853,16 @@ void track::draw(plot::canvas& canvas,
                  const plot::color color,
                  const bool with_errors) const {
   if (fit_converged()) {
-    const auto z_sorted = util::algorithm::copy_sort_range(_full_event, z_ordered<analysis::full_hit>{});
-    canvas.add_line(at_z(z_sorted.front().z), at_z(z_sorted.back().z), size, color);
+    const auto y_sorted = util::algorithm::copy_sort_range(_full_event, y_ordered<analysis::full_hit>{});
+    canvas.add_line(at_y(y_sorted.front().y), at_y(y_sorted.back().y), size, color);
     if (with_errors) {
-      for (const auto& point : z_sorted) {
-        const auto z = point.z;
-        const auto error = error_at_z(z);
-        canvas.add_box(at_z(z),
+      for (const auto& point : y_sorted) {
+        const auto y = point.y;
+        const auto error = error_at_y(y);
+        canvas.add_box(at_y(y),
+                       error.z,
                        error.x,
-                       error.y,
-                       stat::error::uniform(point.width.z),
+                       stat::error::uniform(point.width.y),
                        size,
                        color);
       }

@@ -23,6 +23,10 @@
 #include <tracker/reader.hh>
 #include <tracker/script.hh>
 
+#include <tracker/analysis/type.hh>
+#include <tracker/core/type.hh>
+#include <tracker/core/units.hh>
+
 #include "geometry.hh"
 #include "io.hh"
 
@@ -36,6 +40,8 @@ namespace script   = MATHUSLA::TRACKER::script;
 //----------------------------------------------------------------------------------------------
 
 namespace MATHUSLA {
+
+
 
 //__Alter Event_________________________________________________________________________________
 const analysis::full_event alter_event(const analysis::full_event& event,
@@ -94,14 +100,17 @@ const analysis::track_vector find_tracks(const analysis::full_event& event,
 
 //__Track an Event Bundle_______________________________________________________________________
 void track_event_bundle(const script::path_vector& paths,
-                        const mc::event_vector_bundle& bundle,
+                        const mc::full_event_vector_bundle& bundle,
                         const script::tracking_options& options,
                         const box::io::extension_parser& extension,
                         const script::path_type& save_path) {
   static const plot::value_tag filetype_tag("FILETYPE", "MATHUSLA TRACKING STATFILE");
   static const plot::value_tag project_tag("PROJECT", "Box");
 
+  const auto energy_events = bundle.energy_events;
+  const auto complete_events = bundle.complete_events;
   const auto imported_events = bundle.events;
+
   const auto import_size = imported_events.size();
   if (import_size == 0UL)
     return;
@@ -110,15 +119,23 @@ void track_event_bundle(const script::path_vector& paths,
 
   analysis::track::tree track_tree{"track_tree", "MATHUSLA Track Tree"};
   analysis::vertex::tree vertex_tree{"vertex_tree", "MATHUSLA Vertex Tree"};
+
   // track_tree.set_file(save_path);
   // vertex_tree.set_file(save_path);
   track_tree.add_friend(vertex_tree, "vertex");
   vertex_tree.add_friend(track_tree, "track");
 
+
   std::cout << "Event Count: " << import_size << "\n";
 
+
+
   for (std::size_t event_counter{}; event_counter < import_size; ++event_counter) {
-    const auto event = analysis::add_width<box::geometry>(imported_events[event_counter]);
+
+    const auto digi_event = analysis::add_digi_event<box::geometry>(imported_events[event_counter], energy_events[event_counter], complete_events[event_counter]);
+
+	const auto event = analysis::add_width<box::geometry>(digi_event);
+
     const auto event_size = event.size();
     const auto event_counter_string = std::to_string(event_counter);
 
@@ -128,7 +145,7 @@ void track_event_bundle(const script::path_vector& paths,
 	const auto compressed_event_t = options.time_smearing ? mc::time_smear<box::geometry>(mc::compress<box::geometry>(event))
 	   	                                                  : mc::compress<box::geometry>(event);
 
-	const auto compressed_event = options.positionx_smearing ? mc::positionx_smear<box::geometry>(compressed_event_t)
+	const auto compressed_event = options.positionz_smearing ? mc::positionz_smear<box::geometry>(compressed_event_t)
 		                                                     : compressed_event_t;
 
 
@@ -239,13 +256,18 @@ int box_tracking(int argc,
     box::io::print_tracking_paths(paths);
 
     track_event_bundle(paths,
-      reader::root::import_event_mc_bundle(paths,
-        options.data_timing_offsets,
-        options.data_track_id_key,
-        options.data_t_key,
-        options.data_x_key,
-        options.data_y_key,
-        options.data_z_key),
+      reader::root::import_full_event_mc_bundle(paths,
+          options.data_timing_offsets,
+          options.data_track_id_key,
+          options.data_t_key,
+          options.data_x_key,
+          options.data_y_key,
+          options.data_z_key,
+          options.data_e_key,
+          options.data_px_key,
+          options.data_py_key,
+          options.data_pz_key,
+          options.data_detector_key),
       options,
       extension,
       statistics_save_path);
@@ -268,6 +290,8 @@ int silent_box_tracking(int argc,
   return box_tracking(argc, argv);
 }
 //----------------------------------------------------------------------------------------------
+
+
 
 } /* namespace MATHUSLA */
 

@@ -82,6 +82,17 @@ constexpr UnaryFunction back_insert_transform(const InputRange& in,
 }
 //----------------------------------------------------------------------------------------------
 
+//__Transform Range and SecondRange into another Range Through Back Inserter____________________________________
+template<class InputRange, class SecondInputRange, class OutputRange, class UnaryFunction>
+constexpr UnaryFunction back_insert_transform_two(const InputRange& in,
+                                              SecondInputRange& in_two,
+                                              OutputRange& out,
+                                              UnaryFunction f) {
+  std::transform(std::cbegin(in), std::cend(in), std::cbegin(in_two), std::back_inserter(out), f);
+  return std::move(f);
+}
+//----------------------------------------------------------------------------------------------
+
 //__Transform Range into another Range Through Back Inserter____________________________________
 template<class InputRange, class OutputRange, class UnaryFunction>
 constexpr UnaryFunction back_insert_reverse_transform(const InputRange& in,
@@ -160,6 +171,15 @@ template<class Range, class Compare=std::less<>>
 Range& sort_range(Range& range,
                   Compare comp={}) {
   std::sort(range.begin(), range.end(), comp);
+  return range;
+}
+//----------------------------------------------------------------------------------------------
+
+//__General Range Sorting Function______________________________________________________________
+template<class Range, class Compare=std::less<>>
+Range& unique_range(Range& range,
+                    Compare comp={}) {
+  std::unique(range.begin(), range.end(), comp);
   return range;
 }
 //----------------------------------------------------------------------------------------------

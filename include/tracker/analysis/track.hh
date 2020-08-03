@@ -49,9 +49,9 @@ public:
 
   track();
   track(const event& points,
-        const Coordinate direction=Coordinate::Z);
+        const Coordinate direction=Coordinate::Y);
   track(const full_event& points,
-        const Coordinate direction=Coordinate::Z);
+        const Coordinate direction=Coordinate::Y);
   track(const track& rhs) = default;
   track(track&& rhs) noexcept = default;
   track& operator=(const track& rhs) = default;

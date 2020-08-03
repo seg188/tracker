@@ -36,15 +36,15 @@ namespace box { namespace io { /////////////////////////////////////////////////
 //__Extension Parser Default Constructor________________________________________________________
 extension_parser::extension_parser()
     : layer_count(constants::layer_count),
+      scintillator_z_width(constants::scintillator_z_width),
       scintillator_x_width(constants::scintillator_x_width),
-      scintillator_y_width(constants::scintillator_y_width),
       scintillator_height(constants::scintillator_height),
       layer_spacing(constants::layer_spacing),
       x_displacement(constants::x_displacement),
       y_displacement(constants::y_displacement),
       z_displacement(constants::z_displacement),
-      x_edge_length(constants::x_edge_length),
-      y_edge_length(constants::y_edge_length) {}
+      z_edge_length(constants::z_edge_length),
+      x_edge_length(constants::x_edge_length) {}
 //----------------------------------------------------------------------------------------------
 
 //__Extension Parser for Tracking Script________________________________________________________
@@ -53,12 +53,12 @@ void extension_parser::operator()(const std::string& key,
                                   script::tracking_options& options) {
   if (key == "layer-count") {
     script::parse_size_type(key, value, layer_count);
+  } else if (key == "scintillator_z_width") {
+    script::parse_positive_real(key, value, scintillator_z_width);
+    scintillator_z_width *= units::length;
   } else if (key == "scintillator_x_width") {
     script::parse_positive_real(key, value, scintillator_x_width);
     scintillator_x_width *= units::length;
-  } else if (key == "scintillator_y_width") {
-    script::parse_positive_real(key, value, scintillator_y_width);
-    scintillator_y_width *= units::length;
   } else if (key == "scintillator_height") {
     script::parse_positive_real(key, value, scintillator_height);
     scintillator_height *= units::length;
@@ -71,18 +71,15 @@ void extension_parser::operator()(const std::string& key,
   } else if (key == "y_displacement") {
     script::parse_real(key, value, y_displacement);
     y_displacement *= units::length;
-
   } else if (key == "z_displacement") {
 	  script::parse_real(key, value, z_displacement);
 	  z_displacement *= units::length;
-
-
+  } else if (key == "z_edge_length") {
+    script::parse_positive_real(key, value, z_edge_length);
+    z_edge_length *= units::length;
   } else if (key == "x_edge_length") {
     script::parse_positive_real(key, value, x_edge_length);
     x_edge_length *= units::length;
-  } else if (key == "y_edge_length") {
-    script::parse_positive_real(key, value, y_edge_length);
-    y_edge_length *= units::length;
   } else {
     script::default_extension_parser(key, value, options);
   }

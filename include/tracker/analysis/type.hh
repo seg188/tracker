@@ -43,6 +43,24 @@ using full_event = std::vector<full_hit>;
 using full_event_vector = std::vector<full_event>;
 //----------------------------------------------------------------------------------------------
 
+//__Extended Energy Event Types_________________________________________________________________
+struct energy_hit { real e, px, py, pz; };
+using energy_event = std::vector<energy_hit>;
+using energy_event_vector = std::vector<energy_event>;
+//----------------------------------------------------------------------------------------------
+
+//__Extended Complete Event Types_______________________________________________________________
+struct complete_hit { real t, x, y, z, e, px, py, pz, det_id; };
+using complete_event = std::vector<complete_hit>;
+using complete_event_vector = std::vector<complete_event>;
+//----------------------------------------------------------------------------------------------
+
+//__Digi Event Types____________________________________________________________________________
+struct digi_hit { real t, x, y, z, e, px, py, pz; };
+using digi_event = std::vector<digi_hit>;
+using digi_event_vector = std::vector<digi_event>;
+//----------------------------------------------------------------------------------------------
+
 //__Fitting Parameter Type______________________________________________________________________
 struct fit_parameter { real value, error, min, max; };
 //----------------------------------------------------------------------------------------------
@@ -55,6 +73,72 @@ inline std::ostream& operator<<(std::ostream& os,
                     << point.y / units::length << ", "
                     << point.z / units::length
             << ") +/- " << units::scale_r4_length(point.width) << "]";
+}
+//----------------------------------------------------------------------------------------------
+
+//__Energy Hit Stream Operator Overload___________________________________________________________
+inline std::ostream& operator<<(std::ostream& os,
+								const energy_hit& energy_point) {
+	return os << "(" << energy_point.e / units::energy   << ", "
+			  << energy_point.px / units::momentum << ", "
+			  << energy_point.py / units::momentum << ", "
+			  << energy_point.pz / units::momentum
+			  << ")";
+}
+//----------------------------------------------------------------------------------------------
+
+//__Complete Hit Stream Operator Overload___________________________________________________________
+inline std::ostream& operator<<(std::ostream& os,
+								const complete_hit& point) {
+	return os << "(" << point.t / units::time   << ", "
+              << point.x / units::length << ", "
+              << point.y / units::length << ", "
+              << point.z / units::length << ", "
+              << point.e / units::energy   << ", "
+			  << point.px / units::momentum << ", "
+			  << point.py / units::momentum << ", "
+			  << point.pz / units::momentum << ", "
+              << point.det_id
+			  << ")";
+}
+//----------------------------------------------------------------------------------------------
+
+//__Energy Event Stream Operator Overload_______________________________________________________
+inline std::ostream& operator<<(std::ostream& os, const energy_event& v) {
+	os << "[";
+	for (int i = 0; i < v.size(); ++i) {
+		os << v[i];
+		if (i != v.size() - 1)
+			os << ", ";
+	}
+	os << "]\n";
+	return os;
+}
+//----------------------------------------------------------------------------------------------
+
+//__Event Stream Operator Overload_______________________________________________________
+inline std::ostream& operator<<(std::ostream& os, const event& v) {
+	os << "[";
+	for (int i = 0; i < v.size(); ++i) {
+		os << v[i];
+		if (i != v.size() - 1)
+			os << ", ";
+	}
+	os << "]\n";
+	return os;
+}
+//----------------------------------------------------------------------------------------------
+
+//__Complete Event Stream Operator Overload_______________________________________________________
+inline std::ostream& operator<<(std::ostream& os, const complete_event& v) {
+	os << "[";
+	for (int i = 0; i < v.size(); ++i) {
+		os << v[i];
+		if (i != v.size() - 1)
+			os << ", ";
+	}
+	os << "]\n";
+	return os;
 }
 //----------------------------------------------------------------------------------------------
 

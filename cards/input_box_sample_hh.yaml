@@ -6,20 +6,20 @@ verbose-output: true
 draw-events: false
 
 # Thresholds and Settings
-time-smearing:         true
-positionx-smearing:    true
+time-smearing:         false
+positionx-smearing:    false
 simulated-efficiency:  1
 simulated-noise-rate:  0
 event-time-window:     350, 800
 layer-axis:            Z
-layer-depth:           50
+layer-depth:           10
 line-width:            25				
 seed-size:             3
-event-density-limit:   0.001
+event-density-limit:   0.0005
 
 # Geometry Setup
 geometry-file:                demo/box/resources/world.box.gdml
-geometry-default-time-error:  1.5
+geometry-default-time-error:  1.0
 layer-count:                  29
 scintillator_x_width:         450.0
 scintillator_y_width:         4.5
@@ -33,7 +33,7 @@ y_edge_length:                9000.0
 
 # Data Setup
 data-directories: ...
-  - /uscms/home/agarabag/nobackup/MATHUSLA/simulations/muon/pythia/box/hh/20200630, 0
+  - /uscms/home/agarabag/nobackup/MATHUSLA/Mu-Simulation/data/20200712/133503, 0
 
 data-file-extension:       root
 data-position-keys:        Hit_time, Hit_x, Hit_y, Hit_z

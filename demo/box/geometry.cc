@@ -29,15 +29,21 @@ namespace box { ////////////////////////////////////////////////////////////////
 
 //__Default Geometry Components_________________________________________________________________
 std::size_t geometry::layer_count = constants::layer_count;
+type::real geometry::scintillator_z_width = constants::scintillator_z_width;
 type::real geometry::scintillator_x_width = constants::scintillator_x_width;
-type::real geometry::scintillator_y_width = constants::scintillator_y_width;
 type::real geometry::scintillator_height = constants::scintillator_height;
 type::real geometry::layer_spacing = constants::layer_spacing;
 type::real geometry::x_displacement = constants::x_displacement;
 type::real geometry::y_displacement = constants::y_displacement;
 type::real geometry::z_displacement = constants::z_displacement;
+type::real geometry::z_edge_length = constants::z_edge_length;
 type::real geometry::x_edge_length = constants::x_edge_length;
-type::real geometry::y_edge_length = constants::y_edge_length;
+//----------------------------------------------------------------------------------------------
+
+//__Total Scintillator Count in Z Direction_____________________________________________________
+type::real geometry::z_total_count() {
+  return static_cast<std::size_t>(std::ceil(z_edge_length / scintillator_z_width));
+}
 //----------------------------------------------------------------------------------------------
 
 //__Total Scintillator Count in X Direction_____________________________________________________
@@ -46,26 +52,23 @@ type::real geometry::x_total_count() {
 }
 //----------------------------------------------------------------------------------------------
 
-//__Total Scintillator Count in Y Direction_____________________________________________________
-type::real geometry::y_total_count() {
-  return static_cast<std::size_t>(std::ceil(y_edge_length / scintillator_y_width));
-}
-//----------------------------------------------------------------------------------------------
-
 //__Total Scintillator Count____________________________________________________________________
 type::real geometry::total_count() {
-  return x_total_count() * y_total_count() * layer_count;
+  return z_total_count() * x_total_count() * (layer_count-20.0L);
 }
 //----------------------------------------------------------------------------------------------
 
 //__Index Triple Constructor____________________________________________________________________
 geometry::index_triple::index_triple(const type::r3_point point) {
+
+	//const auto local_position = point - type::r3_point{y_displacement, z_displacement, x_displacement};
   const auto local_position = point - type::r3_point{x_displacement, y_displacement, z_displacement};
-  x = static_cast<std::size_t>(std::floor(+local_position.x / (500.0L*units::cm)  ));
-  y = static_cast<std::size_t>(std::floor(+local_position.y / (5.0L*units::cm)  ));
-  z = 1UL + static_cast<std::size_t>(std::floor(-local_position.z / (layer_spacing + scintillator_height)));
+  x = static_cast<std::size_t>(std::floor(+local_position.x / (5.0L*units::cm)  ));
+  y = 1UL + static_cast<std::size_t>(std::floor(+local_position.y / (layer_spacing + scintillator_height)));
+  z = static_cast<std::size_t>(std::floor(+local_position.z / (500.0L*units::cm)  ));
+
   //z = local_position.z<0 ? 1UL + static_cast<std::size_t>(std::floor(-(local_position.z) / (layer_spacing + scintillator_height))) : 1UL + static_cast<std::size_t>(std::floor(local_position.z / (layer_spacing + scintillator_height)));
-  //  std::cout << "x: " << x << "::::" << "y: " << y << "z: " << z << "::::" << "local_position: " << local_position << std::endl;
+  //  std::cout << "x: " << x << "::::" << "y: " << y << "z: " << z << "::::" << "local_position: " << point << std::endl;
   //  std::cout << "sx: " << scintillator_x_width << "::::" << "sy: " << scintillator_y_width << "::::" << "ls: " << layer_spacing + scintillator_height << ":::::" << "z_displacement: " << z_displacement << std::endl;
 }
 //----------------------------------------------------------------------------------------------
@@ -75,9 +78,9 @@ geometry::index_triple::index_triple(const std::string& name,
                                      const std::string& delimeter) {
   util::string_vector tokens;
   util::string::split(name, tokens, delimeter);
-  x = std::stoul(tokens[1]);
-  y = std::stoul(tokens[2]);
-  z = std::stoul(tokens[0]);
+  x = std::stoul(tokens[2]);
+  y = std::stoul(tokens[0]);
+  z = std::stoul(tokens[1]);
   //std::cout << "z: " << z << std::endl;
 }
 //----------------------------------------------------------------------------------------------
@@ -85,13 +88,13 @@ geometry::index_triple::index_triple(const std::string& name,
 //__Limits of Index Triple Volume_______________________________________________________________
 const tracker_geometry::box_volume geometry::index_triple::limits() const {
   tracker_geometry::box_volume out;
-  out.min.x = x_displacement + ((500.0L*units::cm) * x);
+  out.min.z = z_displacement + ((500.0L*units::cm) * z);
+  out.max.z = out.min.z + scintillator_z_width;
+  out.min.x = x_displacement + ((5.0L*units::cm) * x);
   out.max.x = out.min.x + scintillator_x_width;
-  out.min.y = y_displacement + ((5.0L*units::cm) * y);
-  out.max.y = out.min.y + scintillator_y_width;
-  out.max.z = (-(scintillator_height + layer_spacing) * (z - 1UL)) + z_displacement;
+  out.max.y = ((scintillator_height + layer_spacing) * (y - 1UL)) + y_displacement;
   //out.max.z = (z!=1 || z!=2) ? (-(scintillator_height + layer_spacing) * (z - 1UL)) + z_displacement :  ((scintillator_height + layer_spacing) * (z - 1UL)) + z_displacement;
-  out.min.z = out.max.z + scintillator_height;
+  out.min.y = out.max.y + scintillator_height;
   out.center = 0.5L * (out.min + out.max);
   return out;
 }
@@ -99,7 +102,7 @@ const tracker_geometry::box_volume geometry::index_triple::limits() const {
 
 //__Name of Index Triple Volume_________________________________________________________________
 const tracker_geometry::structure_value geometry::index_triple::name() const {
-  return std::to_string(z) + "_" + std::to_string(x) + "_" + std::to_string(y);
+  return std::to_string(y) + "_" + std::to_string(z) + "_" + std::to_string(x);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -110,20 +113,20 @@ void _insert_volumes(const tracker_geometry::structure_value& prefix,
                      const tracker_geometry::structure_value& suffix,
                      const std::size_t count,
                      tracker_geometry::structure_vector& out) {
-  for (std::size_t x{}; x < count; ++x)
-    out.push_back(prefix + std::to_string(x) + suffix);
+  for (std::size_t z{}; z < count; ++z)
+    out.push_back(prefix + std::to_string(z) + suffix);
 }
 //----------------------------------------------------------------------------------------------
 
 //__Create Scintillator Layers__________________________________________________________________
 const tracker_geometry::structure_vector _make_layer(const std::size_t layer_index,
-                                                     const std::size_t x_count,
-                                                     const std::size_t y_count) {
+                                                     const std::size_t z_count,
+                                                     const std::size_t x_count) {
   tracker_geometry::structure_vector out;
-  out.reserve(x_count * y_count);
+  out.reserve(z_count * x_count);
   const auto layer_string = std::to_string(1UL + layer_index);
-  for (std::size_t y{}; y < y_count; ++y)
-    _insert_volumes(layer_string + "_", "_" + std::to_string(y), x_count, out);
+  for (std::size_t x{}; x < x_count; ++x)
+    _insert_volumes(layer_string + "_", "_" + std::to_string(x), z_count, out);
   return out;
 }
 //----------------------------------------------------------------------------------------------
@@ -131,11 +134,11 @@ const tracker_geometry::structure_vector _make_layer(const std::size_t layer_ind
 //__Add Layers for Full Geometry________________________________________________________________
 void _add_layers(const std::size_t begin,
                  const std::size_t end,
+                 const std::size_t z_count,
                  const std::size_t x_count,
-                 const std::size_t y_count,
                  std::vector<tracker_geometry::structure_vector>& layers) {
-  for (std::size_t z{}; z < end; ++z)
-    layers.push_back(_make_layer(z + begin, x_count, y_count));
+  for (std::size_t y{}; y < end; ++y)
+    layers.push_back(_make_layer(y + begin, z_count, x_count));
 
 }
 //----------------------------------------------------------------------------------------------
@@ -153,10 +156,10 @@ void _load_layers(const std::size_t begin,
 
 //__Unload Layers from Full Structure___________________________________________________________
 void _unload_layers(const std::size_t count,
+                    const std::size_t z_count,
                     const std::size_t x_count,
-                    const std::size_t y_count,
                     tracker_geometry::structure_vector& out) {
-  out.erase(out.cend() - count * x_count * y_count, out.cend());
+  out.erase(out.cend() - count * z_count * x_count, out.cend());
 }
 //----------------------------------------------------------------------------------------------
 
@@ -166,11 +169,11 @@ void _unload_layers(const std::size_t count,
 const tracker_geometry::structure_vector& geometry::full(const std::size_t count) {
   static tracker_geometry::structure_vector out;
   static std::vector<tracker_geometry::structure_vector> layers;
-  static std::size_t current_layer_count{}, current_x_count{}, current_y_count{};
+  static std::size_t current_layer_count{}, current_z_count{}, current_x_count{};
 
-  if (current_x_count != x_total_count() || current_y_count != y_total_count()) {
+  if (current_z_count != z_total_count() || current_x_count != x_total_count()) {
+    current_z_count = z_total_count();
     current_x_count = x_total_count();
-    current_y_count = y_total_count();
     layers.clear();
     out.clear();
   }
@@ -178,10 +181,10 @@ const tracker_geometry::structure_vector& geometry::full(const std::size_t count
   if (current_layer_count < count) {
     const auto layers_size = layers.size();
     if (layers_size < count)
-      _add_layers(layers_size, count - layers_size, current_x_count, current_y_count, layers);
+      _add_layers(layers_size, count - layers_size, current_z_count, current_x_count, layers);
     _load_layers(current_layer_count, count - current_layer_count, layers, out);
   } else if (current_layer_count > count) {
-    _unload_layers(current_layer_count - count, current_x_count, current_y_count, out);
+    _unload_layers(current_layer_count - count, current_z_count, current_x_count, out);
   }
 
   current_layer_count = count;
@@ -256,15 +259,15 @@ const analysis::full_event geometry::restrict_layer_count(const analysis::full_e
 const plot::value_tag_vector geometry::value_tags() {
   return plot::value_tag_vector{
     {"LAYER_COUNT",          std::to_string(layer_count)},
+    {"SCINTILLATOR_Z_WIDTH", std::to_string(scintillator_z_width / units::length) + " " + units::length_string},
     {"SCINTILLATOR_X_WIDTH", std::to_string(scintillator_x_width / units::length) + " " + units::length_string},
-    {"SCINTILLATOR_Y_WIDTH", std::to_string(scintillator_y_width / units::length) + " " + units::length_string},
     {"SCINTILLATOR_HEIGHT",  std::to_string(scintillator_height  / units::length) + " " + units::length_string},
     {"LAYER_SPACING",        std::to_string(layer_spacing        / units::length) + " " + units::length_string},
     {"X_DISPLACEMENT",       std::to_string(x_displacement       / units::length) + " " + units::length_string},
     {"Y_DISPLACEMENT",       std::to_string(y_displacement       / units::length) + " " + units::length_string},
 	{"Z_DISPLACEMENT",       std::to_string(z_displacement       / units::length) + " " + units::length_string},
-    {"X_EDGE_LENGTH",        std::to_string(x_edge_length        / units::length) + " " + units::length_string},
-    {"Y_EDGE_LENGTH",        std::to_string(y_edge_length        / units::length) + " " + units::length_string}
+    {"Z_EDGE_LENGTH",        std::to_string(z_edge_length        / units::length) + " " + units::length_string},
+    {"X_EDGE_LENGTH",        std::to_string(x_edge_length        / units::length) + " " + units::length_string}
   };
 }
 //----------------------------------------------------------------------------------------------

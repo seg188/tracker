@@ -51,11 +51,11 @@ using track_vector = std::vector<track>;
 
 //__Monte-Carlo and Analysis Event Bundle Type__________________________________________________
 struct event_bundle { event true_hits; analysis::event hits; };
-struct full_event_bundle { event true_hits; analysis::full_event hits; };
+struct full_event_bundle { event true_hits; analysis::energy_event energy_hits; analysis::complete_event complete_hits; analysis::event hits; };
 using event_bundle_vector = std::vector<event_bundle>;
 using full_event_bundle_vector = std::vector<full_event_bundle>;
 struct event_vector_bundle { event_vector true_events; analysis::event_vector events; };
-struct full_event_vector_bundle { event_vector true_events; analysis::full_event_vector events; };
+struct full_event_vector_bundle { event_vector true_events; analysis::energy_event_vector energy_events; analysis::complete_event_vector complete_events; analysis::event_vector events; };
 //----------------------------------------------------------------------------------------------
 
 //__Reduce Event Vector to Event________________________________________________________________
@@ -238,11 +238,11 @@ const Event time_smear(const Event& points) {
 }
 //----------------------------------------------------------------------------------------------
 
-//__Smear Points.x______________________________________________________________________________
+//__Smear Points.z______________________________________________________________________________
 template<class Geometry,
 		 class Event,
   typename = std::enable_if_t<is_r4_type_v<typename Event::value_type>>>
-const Event positionx_smear(const Event& points) {
+const Event positionz_smear(const Event& points) {
   Event out;
   out.reserve(points.size());
 
@@ -251,12 +251,13 @@ const Event positionx_smear(const Event& points) {
 	static auto current_error = 15 * units::length;
 	static random::generator gen(random::normal(0.0L, current_error));
 
-	hit.x += gen;
+	hit.z += gen;
 	return hit;
   });
 
-  return x_sort(out);
+  return z_sort(out);
 }
+//----------------------------------------------------------------------------------------------
 
 //__Simulate the Detector Efficiency____________________________________________________________
 template<class Event,
@@ -455,14 +456,14 @@ const analysis::full_event time_smear(const analysis::full_event& points) {
 }
 //----------------------------------------------------------------------------------------------
 
-//__Points.x Smear______________________________________________________________________________
+//__Points.z Smear______________________________________________________________________________
 template<class Geometry=void>
-const analysis::event positionx_smear(const analysis::event& points) {
-  return detail::positionx_smear<Geometry, analysis::event>(points);
+const analysis::event positionz_smear(const analysis::event& points) {
+  return detail::positionz_smear<Geometry, analysis::event>(points);
 }
 template<class Geometry=void>
-const analysis::full_event positionx_smear(const analysis::full_event& points) {
-  return detail::positionx_smear<Geometry, analysis::full_event>(points);
+const analysis::full_event positionz_smear(const analysis::full_event& points) {
+  return detail::positionz_smear<Geometry, analysis::full_event>(points);
 }
 //----------------------------------------------------------------------------------------------
 

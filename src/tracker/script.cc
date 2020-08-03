@@ -58,7 +58,38 @@ void parse_data_keys(const std::string& key,
   } else if (exit_on_error) {
     util::error::exit(
       "[FATAL ERROR] Invalid Data Argument for \"", key, "\" in Tracking Script.\n"
-      "              Expected 1 argument \"T\" or 4 arguments \"T, X, Y, Z\" "
+      "              Expected 1 argument \"Hit_time\" or 4 arguments \"Hit_time, Hit_x, Hit_y, Hit_z\" "
+                    "but received ", size, ".\n");
+  }
+}
+//----------------------------------------------------------------------------------------------
+
+//__Parse Data Key Value Pair___________________________________________________________________
+void parse_data_energy_keys(const std::string& key,
+                     const std::string& value,
+                     std::string& e_key,
+                     std::string& px_key,
+                     std::string& py_key,
+                     std::string& pz_key,
+                     bool exit_on_error) {
+  std::vector<std::string> data_keys;
+  util::string::split(value, data_keys, ",;");
+  const auto size = data_keys.size();
+  const auto& end = data_keys.cend();
+  util::error::exit_when(exit_on_error && std::find(data_keys.cbegin(), end, "") != end,
+    "[FATAL ERROR] Invalid Data Argument for \"", key, "\" in Tracking Script.\n"
+    "              Expected 1 argument \"Hit_energy\" or 4 arguments \"Hit_energy, Hit_particlePx, Hit_particlePy, Hit_particlePz\".\n");
+  if (size == 1) {
+    e_key = data_keys[0];
+  } else if (size == 4) {
+    e_key = data_keys[0];
+    px_key = data_keys[1];
+    py_key = data_keys[2];
+    pz_key = data_keys[3];
+  } else if (exit_on_error) {
+    util::error::exit(
+      "[FATAL ERROR] Invalid Data Argument for \"", key, "\" in Tracking Script.\n"
+      "              Expected 1 argument \"Hit_energy\" or 4 arguments \"Hit_energy, Hit_particlePx, Hit_particlePy, Hit_particlePz\" "
                     "but received ", size, ".\n");
   }
 }
