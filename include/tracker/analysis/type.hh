@@ -87,7 +87,7 @@ inline std::ostream& operator<<(std::ostream& os,
 }
 //----------------------------------------------------------------------------------------------
 
-//__Complete Hit Stream Operator Overload___________________________________________________________
+//__Complete Hit Stream Operator Overload_______________________________________________________
 inline std::ostream& operator<<(std::ostream& os,
 								const complete_hit& point) {
 	return os << "(" << point.t / units::time   << ", "
@@ -99,6 +99,21 @@ inline std::ostream& operator<<(std::ostream& os,
 			  << point.py / units::momentum << ", "
 			  << point.pz / units::momentum << ", "
               << point.det_id
+			  << ")";
+}
+//----------------------------------------------------------------------------------------------
+
+//__Digi Hit Stream Operator Overload___________________________________________________________
+inline std::ostream& operator<<(std::ostream& os,
+								const digi_hit& point) {
+	return os << "(" << point.t / units::time   << ", "
+              << point.x / units::length << ", "
+              << point.y / units::length << ", "
+              << point.z / units::length << ", "
+              << point.e / units::energy   << ", "
+			  << point.px / units::momentum << ", "
+			  << point.py / units::momentum << ", "
+			  << point.pz / units::momentum 
 			  << ")";
 }
 //----------------------------------------------------------------------------------------------
@@ -116,7 +131,7 @@ inline std::ostream& operator<<(std::ostream& os, const energy_event& v) {
 }
 //----------------------------------------------------------------------------------------------
 
-//__Event Stream Operator Overload_______________________________________________________
+//__Event Stream Operator Overload______________________________________________________________
 inline std::ostream& operator<<(std::ostream& os, const event& v) {
 	os << "[";
 	for (int i = 0; i < v.size(); ++i) {
@@ -129,9 +144,22 @@ inline std::ostream& operator<<(std::ostream& os, const event& v) {
 }
 //----------------------------------------------------------------------------------------------
 
-//__Complete Event Stream Operator Overload_______________________________________________________
+//__Complete Event Stream Operator Overload_____________________________________________________
 inline std::ostream& operator<<(std::ostream& os, const complete_event& v) {
 	os << "[";
+	for (int i = 0; i < v.size(); ++i) {
+		os << v[i];
+		if (i != v.size() - 1)
+			os << ", ";
+	}
+	os << "]\n";
+	return os;
+}
+//----------------------------------------------------------------------------------------------
+
+//__Digi Event Stream Operator Overload_________________________________________________________
+inline std::ostream& operator<<(std::ostream& os, const digi_event& v) {
+    os << "[";
 	for (int i = 0; i < v.size(); ++i) {
 		os << v[i];
 		if (i != v.size() - 1)

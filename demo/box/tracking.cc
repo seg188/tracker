@@ -29,6 +29,14 @@
 
 #include "geometry.hh"
 #include "io.hh"
+#include "TTree.h"
+#include <TFile.h>
+#include <vector>
+
+#ifdef __MAKECINT__
+#pragma link C++ class std::vector<double>+;
+#endif
+
 
 //__Namespace Alias_____________________________________________________________________________
 namespace analysis = MATHUSLA::TRACKER::analysis;
@@ -37,6 +45,8 @@ namespace geometry = MATHUSLA::TRACKER::geometry;
 namespace plot     = MATHUSLA::TRACKER::plot;
 namespace reader   = MATHUSLA::TRACKER::reader;
 namespace script   = MATHUSLA::TRACKER::script;
+namespace reader   = MATHUSLA::TRACKER::reader;
+namespace io       = MATHUSLA::box::io;
 //----------------------------------------------------------------------------------------------
 
 namespace MATHUSLA {
@@ -117,6 +127,8 @@ void track_event_bundle(const script::path_vector& paths,
 
   const auto mc_imported_events = bundle.true_events;
 
+  std::cout << "Event Count: " << import_size << "\n";
+
   analysis::track::tree track_tree{"track_tree", "MATHUSLA Track Tree"};
   analysis::vertex::tree vertex_tree{"vertex_tree", "MATHUSLA Vertex Tree"};
 
@@ -125,28 +137,61 @@ void track_event_bundle(const script::path_vector& paths,
   track_tree.add_friend(vertex_tree, "vertex");
   vertex_tree.add_friend(track_tree, "track");
 
+  //___digi_tree(create and fill)_______________________________________________________________
+  TTree digi_tree("digi_tree", "MATHUSLA Digi Tree");
 
-  std::cout << "Event Count: " << import_size << "\n";
+  std::vector<double> digi_hit_t;
+  std::vector<double> digi_hit_x;
+  std::vector<double> digi_hit_y;
+  std::vector<double> digi_hit_z;
+  std::vector<double> digi_hit_e;
+  std::vector<double> digi_hit_px;
+  std::vector<double> digi_hit_py;
+  std::vector<double> digi_hit_pz;
+
+  auto branch_t  = digi_tree.Branch("Digi_time", "std::vector<double>", &digi_hit_t, 32000, 99);
+  auto branch_x  = digi_tree.Branch("Digi_x", "std::vector<double>", &digi_hit_x, 32000, 99);
+  auto branch_y  = digi_tree.Branch("Digi_y", "std::vector<double>", &digi_hit_y, 32000, 99);
+  auto branch_z  = digi_tree.Branch("Digi_z", "std::vector<double>", &digi_hit_z, 32000, 99);
+  auto branch_e  = digi_tree.Branch("Digi_energy", "std::vector<double>", &digi_hit_e, 32000, 99);
+  auto branch_px = digi_tree.Branch("Digi_px", "std::vector<double>", &digi_hit_px, 32000, 99);
+  auto branch_py = digi_tree.Branch("Digi_py", "std::vector<double>", &digi_hit_py, 32000, 99);
+  auto branch_pz = digi_tree.Branch("Digi_pz", "std::vector<double>", &digi_hit_pz, 32000, 99);
+  //____________________________________________________________________________________________
 
 
 
   for (std::size_t event_counter{}; event_counter < import_size; ++event_counter) {
 
+
+    const auto digitized_full_event = analysis::full_digi_event<box::geometry>(imported_events[event_counter], energy_events[event_counter], complete_events[event_counter]);
+    for (const auto& h : digitized_full_event) {
+		digi_hit_e.push_back(h.e);
+		digi_hit_px.push_back(h.px);
+		digi_hit_py.push_back(h.py);
+		digi_hit_pz.push_back(h.pz);
+	}
+
+
     const auto digi_event = analysis::add_digi_event<box::geometry>(imported_events[event_counter], energy_events[event_counter], complete_events[event_counter]);
 
 	const auto event = analysis::add_width<box::geometry>(digi_event);
-
-    const auto event_size = event.size();
-    const auto event_counter_string = std::to_string(event_counter);
-
-	// const auto compressed_event = options.time_smearing ? mc::time_smear<box::geometry>(mc::compress<box::geometry>(event))
-    //                                                     : mc::compress<box::geometry>(event);
+	const auto event_size = event.size();
+	const auto event_counter_string = std::to_string(event_counter);
 
 	const auto compressed_event_t = options.time_smearing ? mc::time_smear<box::geometry>(mc::compress<box::geometry>(event))
 	   	                                                  : mc::compress<box::geometry>(event);
 
 	const auto compressed_event = options.positionz_smearing ? mc::positionz_smear<box::geometry>(compressed_event_t)
 		                                                     : compressed_event_t;
+
+    for (const auto& h : compressed_event) {
+        digi_hit_t.push_back(h.t);
+        digi_hit_x.push_back(h.x);
+        digi_hit_y.push_back(h.y);
+        digi_hit_z.push_back(h.z);
+    }
+
 
 
     const auto compression_size = event_size / static_cast<type::real>(compressed_event.size());
@@ -227,8 +272,42 @@ void track_event_bundle(const script::path_vector& paths,
     box::geometry::value_tags(),
     box::io::data_paths_value_tags(paths, options.data_timing_offsets));
 
-  box::io::save_files(save_path, track_tree, vertex_tree, paths, options.merge_input);
+
+
+  digi_tree.Fill();
+
+  const auto path_count = save_path.size();
+  std::vector<std::string> prefixes;
+  prefixes.reserve(path_count);
+  for (std::size_t i{}; i < path_count; ++i)
+      prefixes.push_back("SIM_" + std::to_string(i) + "_");
+
+  if (options.merge_input) {
+      reader::root::merge_save(save_path, paths, prefixes);
+	  for (std::size_t i{}; i < path_count; ++i) {
+          track_tree.add_friend(prefixes[i] + "box_run", save_path);
+          vertex_tree.add_friend(prefixes[i] + "box_run", save_path);
+          const std::string name = prefixes[i] + "box_run";
+          digi_tree.AddFriend(name.c_str(), save_path.c_str());
+	  }
+  }
+
+
+  track_tree.save(save_path);
+  vertex_tree.save(save_path);
+
+  auto file = TFile::Open(save_path.c_str(), "UPDATE");
+  if (file && !file->IsZombie()) {
+	  file->cd();
+	  digi_tree.Write();
+	  file->Close();
+  }
+
+
+
+//----------------------------------------------------------------------------------------------
 }
+//  box::io::save_files(save_path, track_tree, vertex_tree, paths, options.merge_input);
 //----------------------------------------------------------------------------------------------
 
 //__Box Tracking Algorithm______________________________________________________________________
