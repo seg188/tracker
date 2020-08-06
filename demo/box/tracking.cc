@@ -137,26 +137,28 @@ void track_event_bundle(const script::path_vector& paths,
   track_tree.add_friend(vertex_tree, "vertex");
   vertex_tree.add_friend(track_tree, "track");
 
-  //___digi_tree(create and fill)_______________________________________________________________
+  //___create digi_tree_________________________________________________________________________
   TTree digi_tree("digi_tree", "MATHUSLA Digi Tree");
 
-  std::vector<double> digi_hit_t;
-  std::vector<double> digi_hit_x;
-  std::vector<double> digi_hit_y;
-  std::vector<double> digi_hit_z;
-  std::vector<double> digi_hit_e;
-  std::vector<double> digi_hit_px;
-  std::vector<double> digi_hit_py;
-  std::vector<double> digi_hit_pz;
+    std::vector<double> digi_hit_t;
+    std::vector<double> digi_hit_x;
+    std::vector<double> digi_hit_y;
+    std::vector<double> digi_hit_z;
+    std::vector<double> digi_hit_e;
+    std::vector<double> digi_hit_px;
+    std::vector<double> digi_hit_py;
+    std::vector<double> digi_hit_pz;
+    double Digi_numHits;
 
-  auto branch_t  = digi_tree.Branch("Digi_time", "std::vector<double>", &digi_hit_t, 32000, 99);
-  auto branch_x  = digi_tree.Branch("Digi_x", "std::vector<double>", &digi_hit_x, 32000, 99);
-  auto branch_y  = digi_tree.Branch("Digi_y", "std::vector<double>", &digi_hit_y, 32000, 99);
-  auto branch_z  = digi_tree.Branch("Digi_z", "std::vector<double>", &digi_hit_z, 32000, 99);
-  auto branch_e  = digi_tree.Branch("Digi_energy", "std::vector<double>", &digi_hit_e, 32000, 99);
-  auto branch_px = digi_tree.Branch("Digi_px", "std::vector<double>", &digi_hit_px, 32000, 99);
-  auto branch_py = digi_tree.Branch("Digi_py", "std::vector<double>", &digi_hit_py, 32000, 99);
-  auto branch_pz = digi_tree.Branch("Digi_pz", "std::vector<double>", &digi_hit_pz, 32000, 99);
+    auto branch_digi_num_hits  = digi_tree.Branch("Digi_numHits", &Digi_numHits, "Digi_numHits/D");
+    auto branch_t  = digi_tree.Branch("Digi_time", "std::vector<double>", &digi_hit_t, 32000, 99);
+    auto branch_x  = digi_tree.Branch("Digi_x", "std::vector<double>", &digi_hit_x, 32000, 99);
+    auto branch_y  = digi_tree.Branch("Digi_y", "std::vector<double>", &digi_hit_y, 32000, 99);
+    auto branch_z  = digi_tree.Branch("Digi_z", "std::vector<double>", &digi_hit_z, 32000, 99);
+    auto branch_e  = digi_tree.Branch("Digi_energy", "std::vector<double>", &digi_hit_e, 32000, 99);
+    auto branch_px = digi_tree.Branch("Digi_px", "std::vector<double>", &digi_hit_px, 32000, 99);
+    auto branch_py = digi_tree.Branch("Digi_py", "std::vector<double>", &digi_hit_py, 32000, 99);
+    auto branch_pz = digi_tree.Branch("Digi_pz", "std::vector<double>", &digi_hit_pz, 32000, 99);
   //____________________________________________________________________________________________
 
 
@@ -192,6 +194,22 @@ void track_event_bundle(const script::path_vector& paths,
         digi_hit_z.push_back(h.z);
     }
 
+    Digi_numHits = digi_hit_x.size();
+    if (digitized_full_event.size() == 0UL && digi_event.size() == 0UL) {
+      digi_tree.Fill();
+      continue;
+    }
+    if (digitized_full_event.size() != 0UL && digi_event.size() != 0UL) {
+      digi_tree.Fill();
+    }
+    digi_hit_t.clear();
+    digi_hit_x.clear();
+    digi_hit_y.clear();
+    digi_hit_z.clear();
+    digi_hit_e.clear();
+    digi_hit_px.clear();
+    digi_hit_py.clear();
+    digi_hit_pz.clear();
 
 
     const auto compression_size = event_size / static_cast<type::real>(compressed_event.size());
@@ -274,8 +292,6 @@ void track_event_bundle(const script::path_vector& paths,
 
 
 
-  digi_tree.Fill();
-
   const auto path_count = save_path.size();
   std::vector<std::string> prefixes;
   prefixes.reserve(path_count);
@@ -292,7 +308,6 @@ void track_event_bundle(const script::path_vector& paths,
 	  }
   }
 
-
   track_tree.save(save_path);
   vertex_tree.save(save_path);
 
@@ -305,9 +320,7 @@ void track_event_bundle(const script::path_vector& paths,
 
 
 
-//----------------------------------------------------------------------------------------------
 }
-//  box::io::save_files(save_path, track_tree, vertex_tree, paths, options.merge_input);
 //----------------------------------------------------------------------------------------------
 
 //__Box Tracking Algorithm______________________________________________________________________
