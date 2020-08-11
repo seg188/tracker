@@ -76,7 +76,7 @@ inline std::ostream& operator<<(std::ostream& os,
 }
 //----------------------------------------------------------------------------------------------
 
-//__Energy Hit Stream Operator Overload___________________________________________________________
+//__Energy Hit Stream Operator Overload__________________________________________________________
 inline std::ostream& operator<<(std::ostream& os,
 								const energy_hit& energy_point) {
 	return os << "(" << energy_point.e / units::energy   << ", "
@@ -113,7 +113,7 @@ inline std::ostream& operator<<(std::ostream& os,
               << point.e / units::energy   << ", "
 			  << point.px / units::momentum << ", "
 			  << point.py / units::momentum << ", "
-			  << point.pz / units::momentum 
+			  << point.pz / units::momentum
 			  << ")";
 }
 //----------------------------------------------------------------------------------------------

@@ -183,14 +183,13 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
 
 		  }
 	  }
-	  //need to divide by 10 for some reason!
 	  if (energy_sum>0){
-	  	full_digi_out.push_back({weighted_time/energy_sum * units::time, (point_x/10) * units::length, (point_y/10) * units::length, ((weighted_z/energy_sum)/10) * units::length,
+		full_digi_out.push_back({weighted_time/energy_sum * units::time, (point_x/10) * units::length, (point_y/10) * units::length, ((weighted_z/energy_sum)/10) * units::length,
 	                      	     energy_sum * units::energy, ((weighted_px/energy_sum)) * units::momentum, ((weighted_py/energy_sum)) * units::momentum, ((weighted_pz/energy_sum)) * units::momentum });
 	  }
 
   }
-  // std::cout << "NNNNNNNNNNNNNNNNNNNNNNN: " << full_digi_out <<std::endl;
+  // std::cout << "SSSSSSSSSSSSS: " << full_digi_out.size() <<std::endl;
   return full_digi_out;
 }
 
@@ -200,7 +199,7 @@ const event add_digi_event(const event& points, const energy_event& energy_point
 
   complete_event c_out = complete_points;
   complete_event c_time_sorted = t_sort(c_out);
-  //std::cout << "CCCCCCCCCCCCCCCCCCCC: " << c_time_sorted;
+  // std::cout << "CCCCCCCCCCCCCCCCCCCC: " << c_time_sorted;
 
   std::vector<long double> detector_ids;
   detector_ids.reserve(c_time_sorted.size());
@@ -280,14 +279,13 @@ const event add_digi_event(const event& points, const energy_event& energy_point
 
 		  }
 	  }
-	  //need to divide by 10 for some reason!
 	  if (energy_sum>0){
-	  	digi_out.push_back({weighted_time/energy_sum * units::time, (point_x/10) * units::length, (point_y/10) * units::length, ((weighted_z/energy_sum)/10) * units::length});
+		digi_out.push_back({weighted_time/energy_sum * units::time, (point_x/10) * units::length, (point_y/10) * units::length, ((weighted_z/energy_sum)/10) * units::length});
       }
 
   }
   //  std::cout << "OOOOOOOOOOOOOOOOOOOOOOO: " << out <<std::endl;
-  //  std::cout << "NNNNNNNNNNNNNNNNNNNNNNN: " << digi_out <<std::endl;
+   // std::cout << "NNNNNNNNNNNNNNNNNNNNNNN: " << digi_out <<std::endl;
   return digi_out;
 }
 

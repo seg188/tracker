@@ -80,7 +80,7 @@ class ScriptOptions:
     simulated_efficiency: float = 1
     simulated_noise_rate: float = 0
     event_time_window: Tuple[float, float] = field(default=(0, 0))
-    layer_axis: Coordinate = Coordinate.Z
+    layer_axis: Coordinate = Coordinate.Y
     layer_depth: float = 0
     line_width: float = 1
     seed_size: int = 3

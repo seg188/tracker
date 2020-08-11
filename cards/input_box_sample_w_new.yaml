@@ -48,4 +48,4 @@ statistics-directory:       /home/ag1378/cmslink/bobthebuilder/tracker
 statistics-file-prefix:     statistics
 statistics-file-extension:  root
 # merge-output-trees:         true
-merge-input:                false
+# merge-input:                false
