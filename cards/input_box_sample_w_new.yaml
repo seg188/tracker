@@ -15,7 +15,7 @@ layer-axis:            Y
 layer-depth:           10
 line-width:            25				
 seed-size:             3
-event-density-limit:   0.0005
+event-density-limit:   0.00001
 
 # Geometry Setup
 geometry-file:                demo/box/resources/world.gdml

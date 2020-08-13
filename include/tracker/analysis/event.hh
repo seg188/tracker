@@ -285,7 +285,7 @@ const event add_digi_event(const event& points, const energy_event& energy_point
 
   }
   //  std::cout << "OOOOOOOOOOOOOOOOOOOOOOO: " << out <<std::endl;
-   // std::cout << "NNNNNNNNNNNNNNNNNNNNNNN: " << digi_out <<std::endl;
+  //  std::cout << "NNNNNNNNNNNNNNNNNNNNNNN: " << digi_out <<std::endl;
   return digi_out;
 }
 

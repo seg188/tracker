@@ -549,7 +549,7 @@ void track_event_bundle(const script::path_vector& paths,
     track_angle_error.reserve(tracks.size());
     unique_detector_count.reserve(tracks.size());
 
-    if (event_density <= options.event_density_limit) {
+    if (event_density >= options.event_density_limit) {
         for (const auto& track : tracks) {
             if (track.fit_converged()) {
                 track_numHits.push_back(track.size());
@@ -640,7 +640,7 @@ void track_event_bundle(const script::path_vector& paths,
       vertex_chi2.reserve(vertices.size());
       vertex_chi2_per_dof.reserve(vertices.size());
       vertex_chi2_p_value.reserve(vertices.size());
-	  if (event_density <= options.event_density_limit) {
+	  if (event_density >= options.event_density_limit) {
 		  for (const auto& vertex : vertices) {
 			  if (vertex.fit_converged()) {
 				  vertex_numTracks.push_back(vertex.size());
