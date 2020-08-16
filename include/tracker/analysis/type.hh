@@ -50,13 +50,13 @@ using energy_event_vector = std::vector<energy_event>;
 //----------------------------------------------------------------------------------------------
 
 //__Extended Complete Event Types_______________________________________________________________
-struct complete_hit { real t, x, y, z, e, px, py, pz, det_id; };
+struct complete_hit { real t, x, y, z, e, px, py, pz, det_id, index; };
 using complete_event = std::vector<complete_hit>;
 using complete_event_vector = std::vector<complete_event>;
 //----------------------------------------------------------------------------------------------
 
 //__Digi Event Types____________________________________________________________________________
-struct digi_hit { real t, x, y, z, e, px, py, pz; };
+struct digi_hit { real t, x, y, z, e, px, py, pz; std::string i; };
 using digi_event = std::vector<digi_hit>;
 using digi_event_vector = std::vector<digi_event>;
 //----------------------------------------------------------------------------------------------
@@ -98,8 +98,8 @@ inline std::ostream& operator<<(std::ostream& os,
 			  << point.px / units::momentum << ", "
 			  << point.py / units::momentum << ", "
 			  << point.pz / units::momentum << ", "
-              << point.det_id
-			  << ")";
+        << point.det_id << ", "
+			  << point.index <<")";
 }
 //----------------------------------------------------------------------------------------------
 
@@ -113,8 +113,8 @@ inline std::ostream& operator<<(std::ostream& os,
               << point.e / units::energy   << ", "
 			  << point.px / units::momentum << ", "
 			  << point.py / units::momentum << ", "
-			  << point.pz / units::momentum
-			  << ")";
+			  << point.pz / units::momentum << ", "
+			  << point.i <<")";
 }
 //----------------------------------------------------------------------------------------------
 

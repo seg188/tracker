@@ -220,6 +220,7 @@ void track_event_bundle(const script::path_vector& paths,
   auto t_unique_detector_count = integral_tree.Branch("Track_detCount", "std::vector<double>", &unique_detector_count, 32000, 99);
 
   //___Make Digi Branches_____________________________________________________________________
+  Double_t Digi_numHits;
   std::vector<double> digi_hit_t;
   std::vector<double> digi_hit_x;
   std::vector<double> digi_hit_y;
@@ -228,7 +229,7 @@ void track_event_bundle(const script::path_vector& paths,
   std::vector<double> digi_hit_px;
   std::vector<double> digi_hit_py;
   std::vector<double> digi_hit_pz;
-  Double_t Digi_numHits;
+  std::vector<std::string> digi_hit_i;
 
   auto branch_digi_num_hits  = integral_tree.Branch("Digi_numHits", &Digi_numHits, "Digi_numHits/D");
   auto branch_t  = integral_tree.Branch("Digi_time", "std::vector<double>", &digi_hit_t, 32000, 99);
@@ -239,6 +240,7 @@ void track_event_bundle(const script::path_vector& paths,
   auto branch_px = integral_tree.Branch("Digi_px", "std::vector<double>", &digi_hit_px, 32000, 99);
   auto branch_py = integral_tree.Branch("Digi_py", "std::vector<double>", &digi_hit_py, 32000, 99);
   auto branch_pz = integral_tree.Branch("Digi_pz", "std::vector<double>", &digi_hit_pz, 32000, 99);
+  auto branch_indices = integral_tree.Branch("Digi_indices", "std:string", &digi_hit_i);
   //____________________________________________________________________________________________
 
  //___Make Sim Branches_________________________________________________________________________
@@ -415,6 +417,7 @@ void track_event_bundle(const script::path_vector& paths,
     }
 
     const auto digitized_full_event = analysis::full_digi_event<box::geometry>(imported_events[event_counter], energy_events[event_counter], complete_events[event_counter]);
+  //  std::cout << imported_events[event_counter] << "/////////////////" << digitized_full_event <<  '\n';
 
     const auto digi_event = analysis::add_digi_event<box::geometry>(imported_events[event_counter], energy_events[event_counter], complete_events[event_counter]);
 	const auto event = analysis::add_width<box::geometry>(digi_event);
@@ -478,11 +481,13 @@ void track_event_bundle(const script::path_vector& paths,
     digi_hit_px.clear();
     digi_hit_py.clear();
     digi_hit_pz.clear();
+    digi_hit_i.clear();
     for (const auto& h : digitized_full_event) {
         digi_hit_e.push_back(h.e / units::energy);
         digi_hit_px.push_back(h.px / units::momentum);
         digi_hit_py.push_back(h.py / units::momentum);
         digi_hit_pz.push_back(h.pz / units::momentum);
+        digi_hit_i.push_back(h.i);
     }
     for (const auto& h : compressed_event) {
         digi_hit_t.push_back(h.t / units::time);
@@ -660,7 +665,7 @@ void track_event_bundle(const script::path_vector& paths,
 		  numvertices = vertices.size();
 	  }
 //______________________________________________________________________________________________
-
+std::cout << digi_hit_i << '\n';
     integral_tree.Fill();
 
     canvas.draw();

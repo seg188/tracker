@@ -942,10 +942,11 @@ const analysis::mc::full_event_vector_bundle import_full_event_mc_bundle(const s
         true_points.reserve(size);
 
         for (std::size_t i = 0; i < size; ++i) {
+          long double index = i;
 	      points.push_back({(*t)[i] * units::time, (*x)[i] * units::length, (*y)[i] * units::length, (*z)[i] * units::length});
           energy_points.push_back({(*e)[i] * units::energy, (*px)[i] * units::momentum, (*py)[i] * units::momentum, (*pz)[i] * units::momentum});
           complete_points.push_back({(*t)[i] * units::time, (*x)[i] * units::length, (*y)[i] * units::length, (*z)[i] * units::length,
-                                     (*e)[i] * units::energy, (*px)[i] * units::momentum, (*py)[i] * units::momentum, (*pz)[i] * units::momentum, (*detector)[i]});
+                                     (*e)[i] * units::energy, (*px)[i] * units::momentum, (*py)[i] * units::momentum, (*pz)[i] * units::momentum, (*detector)[i], index});
           true_points.push_back({_track_id((*track)[i]), (*t)[i] * units::time, (*x)[i] * units::length, (*y)[i] * units::length, (*z)[i] * units::length});
         }
         out.true_events.push_back(true_points);
