@@ -34,7 +34,6 @@
 
 #ifdef __MAKECINT__
 #pragma link C++ class std::vector<double>+;
-#pragma link C++ class std::vector<std::string>+;
 #endif
 
 
@@ -87,15 +86,15 @@ const analysis::track_vector find_tracks(const analysis::full_event& event,
       {options.line_width},
       {0.9L * units::speed_of_light}});
 
-  /*
-  for (const auto& seed : seeds) {
-    for (std::size_t i{}; i < seed.size() - 1UL; ++i)
-      canvas.add_line(type::reduce_to_r4(seed[i]), type::reduce_to_r4(seed[i + 1UL]), 1, plot::color::BLACK);
-    for (const auto& point : seed)
-      std::cout << type::reduce_to_r4(point) << " ";
-    std::cout << "\n";
-  }
-  */
+
+  // for (const auto& seed : seeds) {
+  // 	  //    for (std::size_t i{}; i < seed.size() - 1UL; ++i)
+  // 	  //      canvas.add_line(type::reduce_to_r4(seed[i]), type::reduce_to_r4(seed[i + 1UL]), 1, plot::color::BLACK);
+  //   for (const auto& point : seed)
+  //     std::cout << type::reduce_to_r4(point) << " ";
+  //   std::cout << "\n";
+  // }
+
 
   const auto joined = analysis::join_all(seeds);
   auto first_tracks = analysis::independent_fit_seeds(joined, options.layer_axis);
@@ -136,6 +135,10 @@ void track_event_bundle(const script::path_vector& paths,
   // vertex_tree.set_file(save_path);
   // track_tree.add_friend(vertex_tree, "vertex");
   // vertex_tree.add_friend(track_tree, "track");
+
+  std::vector<double> layer_center = {6002.5, 6105.5, 8002.5, 8105.5, 8502.5, 8605.5, 8708.5, 8811.5, 8914.5};
+  std::vector<std::vector<double>> detector_x_limits = {{-4955, -4045}, {-3955, -3045}, {-2955, -2045}, {-1955, -1045}, {-955, -45}, {45, 955}, {1045, 1955}, {2045, 2955}, {3045, 3955}, {4045, 4955}};
+  std::vector<std::vector<double>> detector_z_limits = {{6995, 7905}, {7995, 8905}, {8995, 9905}, {9995, 10905}, {10995, 11905}, {11995, 12905}, {12995, 13905}, {13995, 14905}, {14995, 15905}, {15995, 16905}};
 
   TTree integral_tree("integral_tree", "MATHUSLA Tree");
 
@@ -192,6 +195,8 @@ void track_event_bundle(const script::path_vector& paths,
   std::vector<double> track_vx_error;
   std::vector<double> track_vy_error;
   std::vector<double> track_vz_error;
+  std::vector<double> track_expected_hit_layer;
+  std::vector<double> track_missing_hit_layer;
   Double_t numtracks;
 
   auto t_numtracks  = integral_tree.Branch("NumTracks", &numtracks, "NumTracks/D");
@@ -218,7 +223,8 @@ void track_event_bundle(const script::path_vector& paths,
   auto t_angle = integral_tree.Branch("Track_angle", "std::vector<double>", &track_angle, 32000, 99);
   auto t_angle_error = integral_tree.Branch("Track_ErrorAngle", "std::vector<double>", &track_angle_error, 32000, 99);
   auto t_unique_detector_count = integral_tree.Branch("Track_detCount", "std::vector<double>", &unique_detector_count, 32000, 99);
-
+  auto t_expected_hit_layer = integral_tree.Branch("Track_expectedHitLayer", "std::vector<double>", &track_expected_hit_layer, 32000, 99);
+  auto t_missing_hit_layer = integral_tree.Branch("Track_missingHitLayer", "std::vector<double>", &track_missing_hit_layer, 32000, 99);
   //___Make Digi Branches_____________________________________________________________________
   std::vector<double> digi_hit_t;
   std::vector<double> digi_hit_x;
@@ -427,7 +433,6 @@ void track_event_bundle(const script::path_vector& paths,
 	const auto compressed_event = options.positionz_smearing ? mc::positionz_smear<box::geometry>(compressed_event_t)
 		                                                     : compressed_event_t;
 
-
     const auto compression_size = event_size / static_cast<type::real>(compressed_event.size());
 
     const auto altered_event = alter_event(compressed_event, options, extension);
@@ -525,6 +530,8 @@ void track_event_bundle(const script::path_vector& paths,
     track_angle.clear();
     track_angle_error.clear();
     unique_detector_count.clear();
+	track_expected_hit_layer.clear();
+	track_missing_hit_layer.clear();
     track_t.reserve(tracks.size());
     track_x.reserve(tracks.size());
     track_y.reserve(tracks.size());
@@ -548,6 +555,8 @@ void track_event_bundle(const script::path_vector& paths,
     track_angle.reserve(tracks.size());
     track_angle_error.reserve(tracks.size());
     unique_detector_count.reserve(tracks.size());
+	track_expected_hit_layer.reserve(tracks.size());
+    track_missing_hit_layer.reserve(tracks.size());
 
     if (event_density >= options.event_density_limit) {
         for (const auto& track : tracks) {
@@ -587,9 +596,41 @@ void track_event_bundle(const script::path_vector& paths,
                 track_vx_error.push_back(track.final_fit().vx.error / units::velocity);
                 track_vy_error.push_back(track.final_fit().vy.error / units::velocity);
                 track_vz_error.push_back(track.final_fit().vz.error / units::velocity);
+
+				std::vector<double> hits_y;
+				hits_y.clear();
+				hits_y.reserve(track.event().size());
+				for (const auto& hits : track.event()) {
+					hits_y.push_back(hits.y / units::length);
+				}
+
+                for (const auto& determined_y : layer_center) { //per layer
+					if (track.final_fit().vy.value > 0) {
+						const auto point_t = (determined_y - (track.final_fit().y0.value / units::length)) / (track.final_fit().vy.value / units::velocity);
+						const auto point_x = (track.final_fit().x0.value / units::length) + (point_t*(track.final_fit().vx.value / units::velocity));
+						const auto point_y = determined_y;
+						const auto point_z = (track.final_fit().z0.value / units::length) + (point_t*(track.final_fit().vz.value / units::velocity));
+						//						std::cout << "determined_y: " << determined_y << " track_y: " << track.final_fit().y0.value/ units::length << " point_t: " << point_t << " point_x: " << point_x << " point_y: " << point_y << " point_z: " << point_z << "\n";
+						for (auto x_limit : detector_x_limits) {
+							for (auto z_limit : detector_z_limits) {
+								if (point_x < x_limit[1] && point_x > x_limit[0] && point_z < z_limit[1] && point_z > z_limit[0]) { // is there a detector for this point
+									//expected hit in this layer
+									track_expected_hit_layer.push_back(determined_y);
+									if (std::count(hits_y.begin(), hits_y.end(), determined_y)==0) { // if there is no hit in that layer for this track
+										//missing hit
+										track_missing_hit_layer.push_back(determined_y);
+									}
+								}
+							}
+						}
+
+					}
+                }
+
 			}
 		}
 		numtracks = tracks.size();
+
 	}
 //______________________________________________________________________________________________
 

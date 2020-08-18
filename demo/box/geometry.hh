@@ -41,7 +41,7 @@ static const auto scintillator_time_resolution  = 1.5L*units::ns;
 static const auto z_edge_length                 = 90.00L*units::m;
 static const auto x_edge_length                 = 90.00L*units::m;
 static const auto x_displacement                = -49.50L*units::m;
-static const auto y_displacement                = 60.0L*units::m;
+static const auto y_displacement                = 6001.5L*units::cm;
 static const auto z_displacement                = 70.0L*units::m;
 static const auto steel_height                  =   3.00L*units::cm;
 
@@ -53,7 +53,7 @@ static const auto scintillator_height           =   0.02L*units::m;
 static const auto scintillator_casing_thickness =   0.005L*units::m;
 
 static const auto layer_spacing                 = 1.0L*units::m;
-static const auto layer_count                   = 7UL;
+static const auto layer_count                   = 9UL;
 
 static const auto full_layer_height = scintillator_height + 2*scintillator_casing_thickness;
 static const auto full_module_height =  25.0L*units::m + 5.0*(full_layer_height) + 4.0*layer_spacing;

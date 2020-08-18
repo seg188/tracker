@@ -54,22 +54,35 @@ type::real geometry::x_total_count() {
 
 //__Total Scintillator Count____________________________________________________________________
 type::real geometry::total_count() {
-  return z_total_count() * x_total_count() * (layer_count-20.0L);
+  return z_total_count() * x_total_count() * layer_count;
 }
 //----------------------------------------------------------------------------------------------
 
 //__Index Triple Constructor____________________________________________________________________
 geometry::index_triple::index_triple(const type::r3_point point) {
-
-	//const auto local_position = point - type::r3_point{y_displacement, z_displacement, x_displacement};
   const auto local_position = point - type::r3_point{x_displacement, y_displacement, z_displacement};
   x = static_cast<std::size_t>(std::floor(+local_position.x / (5.0L*units::cm)  ));
-  y = 1UL + static_cast<std::size_t>(std::floor(+local_position.y / (layer_spacing + scintillator_height)));
   z = static_cast<std::size_t>(std::floor(+local_position.z / (500.0L*units::cm)  ));
-
-  //z = local_position.z<0 ? 1UL + static_cast<std::size_t>(std::floor(-(local_position.z) / (layer_spacing + scintillator_height))) : 1UL + static_cast<std::size_t>(std::floor(local_position.z / (layer_spacing + scintillator_height)));
-  //  std::cout << "x: " << x << "::::" << "y: " << y << "z: " << z << "::::" << "local_position: " << point << std::endl;
-  //  std::cout << "sx: " << scintillator_x_width << "::::" << "sy: " << scintillator_y_width << "::::" << "ls: " << layer_spacing + scintillator_height << ":::::" << "z_displacement: " << z_displacement << std::endl;
+  if (point.y < 6050*units::cm) {
+	  y = 1UL + static_cast<std::size_t>(std::floor(+local_position.y / (layer_spacing + scintillator_height)));
+  } else if (point.y > 6060*units::cm && point.y < 6150*units::cm) {
+	  y = 1UL + static_cast<std::size_t>(std::floor((+local_position.y - 1*units::cm) / (layer_spacing + scintillator_height)));
+  } else if (point.y > 7900*units::cm && point.y < 8050*units::cm) {
+	  y = 1UL + static_cast<std::size_t>(std::floor((+local_position.y - 1796*units::cm) / (layer_spacing + scintillator_height)));
+  } else if (point.y > 8050*units::cm && point.y < 8150*units::cm) {
+	  y = 1UL + static_cast<std::size_t>(std::floor((+local_position.y - 1797*units::cm) / (layer_spacing + scintillator_height)));
+  } else if (point.y > 8400*units::cm && point.y < 8550*units::cm) {
+	  y = 1UL + static_cast<std::size_t>(std::floor((+local_position.y - 2092*units::cm) / (layer_spacing + scintillator_height)));
+  } else if (point.y > 8560*units::cm && point.y < 8650*units::cm) {
+	  y = 1UL + static_cast<std::size_t>(std::floor((+local_position.y - 2093*units::cm) / (layer_spacing + scintillator_height)));
+  } else if (point.y > 8660*units::cm && point.y < 8750*units::cm) {
+	  y = 1UL + static_cast<std::size_t>(std::floor((+local_position.y - 2094*units::cm) / (layer_spacing + scintillator_height)));
+  } else if (point.y > 7760*units::cm && point.y < 8850*units::cm) {
+	  y = 1UL + static_cast<std::size_t>(std::floor((+local_position.y - 2095*units::cm) / (layer_spacing + scintillator_height)));
+  } else {
+	  y = 1UL + static_cast<std::size_t>(std::floor((+local_position.y - 2096*units::cm) / (layer_spacing + scintillator_height)));
+  }
+  //  std::cout << "point: " << point << " y: " << y << "\n";
 }
 //----------------------------------------------------------------------------------------------
 
@@ -81,7 +94,6 @@ geometry::index_triple::index_triple(const std::string& name,
   x = std::stoul(tokens[2]);
   y = std::stoul(tokens[0]);
   z = std::stoul(tokens[1]);
-  //std::cout << "z: " << z << std::endl;
 }
 //----------------------------------------------------------------------------------------------
 
@@ -92,9 +104,34 @@ const tracker_geometry::box_volume geometry::index_triple::limits() const {
   out.max.z = out.min.z + scintillator_z_width;
   out.min.x = x_displacement + ((5.0L*units::cm) * x);
   out.max.x = out.min.x + scintillator_x_width;
-  out.max.y = ((scintillator_height + layer_spacing) * (y - 1UL)) + y_displacement;
-  //out.max.z = (z!=1 || z!=2) ? (-(scintillator_height + layer_spacing) * (z - 1UL)) + z_displacement :  ((scintillator_height + layer_spacing) * (z - 1UL)) + z_displacement;
-  out.min.y = out.max.y + scintillator_height;
+  if (y == 1) {
+	  out.min.y = ((scintillator_height + layer_spacing) * (y - 1UL)) + y_displacement;
+	  out.max.y = out.min.y + scintillator_height;
+  } else if (y==2) {
+     out.min.y = ((scintillator_height + layer_spacing) * (y - 1UL)) + (y_displacement + 1*units::cm);
+     out.max.y = out.min.y + scintillator_height;
+  } else if (y==3) {
+	  out.min.y = ((scintillator_height + layer_spacing) * (y - 1UL)) + (y_displacement + 1796*units::cm);
+	  out.max.y = out.min.y + scintillator_height;
+  } else if (y==4) {
+	  out.min.y = ((scintillator_height + layer_spacing) * (y - 1UL)) + (y_displacement + 1797*units::cm);
+	  out.max.y = out.min.y + scintillator_height;
+  } else if (y==5) {
+	  out.min.y = ((scintillator_height + layer_spacing) * (y - 1UL)) + (y_displacement + 2092*units::cm);
+	  out.max.y = out.min.y + scintillator_height;
+  } else if (y==6) {
+	  out.min.y = ((scintillator_height + layer_spacing) * (y - 1UL)) + (y_displacement + 2093*units::cm);
+	  out.max.y = out.min.y + scintillator_height;
+  } else if (y==7) {
+	  out.min.y = ((scintillator_height + layer_spacing) * (y - 1UL)) + (y_displacement + 2094*units::cm);
+	  out.max.y = out.min.y + scintillator_height;
+  } else if (y==8) {
+	  out.min.y = ((scintillator_height + layer_spacing) * (y - 1UL)) + (y_displacement + 2095*units::cm);
+	  out.max.y = out.min.y + scintillator_height;
+  } else {
+      out.min.y = ((scintillator_height + layer_spacing) * (y - 1UL)) + (y_displacement + 2096*units::cm);
+      out.max.y = out.min.y + scintillator_height;
+  }
   out.center = 0.5L * (out.min + out.max);
   return out;
 }

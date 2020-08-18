@@ -162,10 +162,10 @@ bool _fit_event_minuit(const full_event& points,
     if (execute(minuit, _gaussian_nll_two_hit_track) == error::diverged)
       return false;
   } else {
-    set_parameters(minuit, 6UL, "VZ", vz);
+    set_parameters(minuit, 6UL, "VY", vy);
     if (execute(minuit, _gaussian_nll) == error::diverged)
       return false;
-    get_parameters(minuit, 6UL, vz);
+    get_parameters(minuit, 6UL, vy);
   }
 
   get_parameters(minuit, t0, x0, y0, z0, vx, vy);
