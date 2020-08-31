@@ -28,8 +28,8 @@
 
 //__For Printing Type std::vector_______________________________________________________________
 namespace std {
-	template <typename T>
-	inline std::ostream& operator<<(std::ostream& os, const vector<T>& v)
+	template <typename D>
+	inline std::ostream& operator<<(std::ostream& os, const vector<D>& v)
 	{
 		os << "[";
 		for (int i = 0; i < v.size(); ++i) {
@@ -79,7 +79,6 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
 
   complete_event c_out = complete_points;
   complete_event c_time_sorted = t_sort(c_out);
-  // std::cout << "CCCCCCCCCCCCCCCCCCCC: " << c_time_sorted;
 
   std::vector<long double> detector_ids;
   detector_ids.reserve(c_time_sorted.size());
@@ -88,6 +87,7 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
   }
   util::algorithm::sort_range(detector_ids);
   detector_ids.erase(std::unique(detector_ids.begin(), detector_ids.end()), detector_ids.cend());
+
 
   digi_event full_digi_out;
   full_digi_out.reserve(detector_ids.size());
@@ -105,6 +105,7 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
 	  long double weighted_pz = 0;
 	  long double point_x = 0;
       long double point_y = 0;
+	  std::vector<double> indices;
 
 	  int counter = 0;
 	  std::vector<long double> times;
@@ -123,6 +124,8 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
 	  pzs.reserve(counter);
 	  std::vector<long double> deposits;
       deposits.reserve(counter);
+	  std::vector<double> inds;
+	  inds.reserve(counter);
 
       for (const auto& h : c_time_sorted) {
           if (h.det_id == d){
@@ -134,12 +137,14 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
 			  pys.push_back(h.py);
 			  pzs.push_back(h.pz);
               deposits.push_back(h.e);
+			  inds.push_back(h.index);
 			  ++counter;
 		  }
 	  }
 
-	  for (const auto& h : c_time_sorted) {
-		  if (h.det_id == d){
+
+	  // for (const auto& h : c_time_sorted) {
+	  // 	   if (h.det_id == d){
 			  auto starting_index = 0;
 			  while (starting_index < times.size()) {
 				  auto t0 = times[starting_index];
@@ -149,6 +154,8 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
 				  std::vector<long double> px_components;
 				  std::vector<long double> py_components;
 				  std::vector<long double> pz_components;
+				  std::vector<double> index_components;
+
 				  for (int i = 0; i < times.size(); i++) {
 					  if (times[i] < (t0 + spacing)) {
 						  e_components.push_back(deposits[i]);
@@ -157,6 +164,7 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
 						  px_components.push_back(pxs[i]*deposits[i]);
 						  py_components.push_back(pys[i]*deposits[i]);
 						  pz_components.push_back(pzs[i]*deposits[i]);
+						  index_components.push_back(inds[i]);
 					  }
 				  }
 				  long double e_sum = std::accumulate(e_components.begin(), e_components.end(), 0.0L);
@@ -172,22 +180,22 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
 					  weighted_px = px_sum;
 					  weighted_py = py_sum;
 					  weighted_pz = pz_sum;
+					  indices = index_components;
                       starting_index += e_components.size();
 				  } else {
                       starting_index += 1;
 				  }
 			  }
-
 			  point_x = xs[0];
 			  point_y = ys[0];
 
-		  }
-	  }
-	  if (energy_sum>0){
-		full_digi_out.push_back({weighted_time/energy_sum * units::time, (point_x/10) * units::length, (point_y/10) * units::length, ((weighted_z/energy_sum)/10) * units::length,
-	                      	     energy_sum * units::energy, ((weighted_px/energy_sum)) * units::momentum, ((weighted_py/energy_sum)) * units::momentum, ((weighted_pz/energy_sum)) * units::momentum });
-	  }
+		//   }
+	  // }
 
+	  if (energy_sum>0){
+	  	full_digi_out.push_back({weighted_time/energy_sum * units::time, (point_x/10) * units::length, (point_y/10) * units::length, ((weighted_z/energy_sum)/10) * units::length,
+	                      	   	 energy_sum * units::energy, ((weighted_px/energy_sum)) * units::momentum, ((weighted_py/energy_sum)) * units::momentum, ((weighted_pz/energy_sum)) * units::momentum, indices});
+      }
   }
   // std::cout << "SSSSSSSSSSSSS: " << full_digi_out.size() <<std::endl;
   return full_digi_out;
@@ -199,6 +207,7 @@ const event add_digi_event(const event& points, const energy_event& energy_point
 
   complete_event c_out = complete_points;
   complete_event c_time_sorted = t_sort(c_out);
+
   // std::cout << "CCCCCCCCCCCCCCCCCCCC: " << c_time_sorted;
 
   std::vector<long double> detector_ids;
@@ -246,8 +255,9 @@ const event add_digi_event(const event& points, const energy_event& energy_point
 		  }
 	  }
 
-	  for (const auto& h : c_time_sorted) {
-		  if (h.det_id == d){
+
+	  // for (const auto& h : c_time_sorted) {
+	  // 	   if (h.det_id == d){
 			  auto starting_index = 0;
 			  while (starting_index < times.size()) {
 				  auto t0 = times[starting_index];
@@ -277,14 +287,14 @@ const event add_digi_event(const event& points, const energy_event& energy_point
 			  point_x = xs[0];
 			  point_y = ys[0];
 
-		  }
-	  }
-	  if (energy_sum>0){
+		//   }
+	  // }
+
+      if (energy_sum>0){
 		digi_out.push_back({weighted_time/energy_sum * units::time, (point_x/10) * units::length, (point_y/10) * units::length, ((weighted_z/energy_sum)/10) * units::length});
-      }
+	  }
 
   }
-  //  std::cout << "OOOOOOOOOOOOOOOOOOOOOOO: " << out <<std::endl;
   //  std::cout << "NNNNNNNNNNNNNNNNNNNNNNN: " << digi_out <<std::endl;
   return digi_out;
 }
@@ -321,12 +331,13 @@ const full_hit add_width(const hit& point) {
   const auto center = limits.center;
   const auto min = limits.min;
   const auto max = limits.max;
+  //width of z is 15*sqrt(12) this is a hack (FIX ME)
   return full_hit{
     point.t, center.x, center.y, point.z,
     {geometry::custom::time_resolution_of<Geometry>(volume),
      max.x - min.x,
      max.y - min.y,
-     max.z - min.z}};
+	 52.0L*units::cm}};
 }
 template<class Geometry=void>
 const full_event add_width(const event& points) {

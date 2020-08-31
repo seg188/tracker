@@ -82,7 +82,7 @@ geometry::index_triple::index_triple(const type::r3_point point) {
   } else {
 	  y = 1UL + static_cast<std::size_t>(std::floor((+local_position.y - 2096*units::cm) / (layer_spacing + scintillator_height)));
   }
-  //  std::cout << "point: " << point << " y: " << y << "\n";
+  //  std::cout << "point: " << point << " x: " << x << "\n";
 }
 //----------------------------------------------------------------------------------------------
 

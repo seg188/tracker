@@ -195,8 +195,8 @@ void track_event_bundle(const script::path_vector& paths,
   std::vector<double> track_vx_error;
   std::vector<double> track_vy_error;
   std::vector<double> track_vz_error;
-  std::vector<double> track_expected_hit_layer;
-  std::vector<double> track_missing_hit_layer;
+  std::vector<std::vector<double>> track_expected_hit_layer;
+  std::vector<std::vector<double>> track_missing_hit_layer;
   Double_t numtracks;
 
   auto t_numtracks  = integral_tree.Branch("NumTracks", &numtracks, "NumTracks/D");
@@ -223,8 +223,8 @@ void track_event_bundle(const script::path_vector& paths,
   auto t_angle = integral_tree.Branch("Track_angle", "std::vector<double>", &track_angle, 32000, 99);
   auto t_angle_error = integral_tree.Branch("Track_ErrorAngle", "std::vector<double>", &track_angle_error, 32000, 99);
   auto t_unique_detector_count = integral_tree.Branch("Track_detCount", "std::vector<double>", &unique_detector_count, 32000, 99);
-  auto t_expected_hit_layer = integral_tree.Branch("Track_expectedHitLayer", "std::vector<double>", &track_expected_hit_layer, 32000, 99);
-  auto t_missing_hit_layer = integral_tree.Branch("Track_missingHitLayer", "std::vector<double>", &track_missing_hit_layer, 32000, 99);
+  auto t_expected_hit_layer = integral_tree.Branch("Track_expectedHitLayer", "std::vector<std::vector<double>>", &track_expected_hit_layer, 32000, 99);
+  auto t_missing_hit_layer = integral_tree.Branch("Track_missingHitLayer", "std::vector<std::vector<double>>", &track_missing_hit_layer, 32000, 99);
   //___Make Digi Branches_____________________________________________________________________
   std::vector<double> digi_hit_t;
   std::vector<double> digi_hit_x;
@@ -234,6 +234,7 @@ void track_event_bundle(const script::path_vector& paths,
   std::vector<double> digi_hit_px;
   std::vector<double> digi_hit_py;
   std::vector<double> digi_hit_pz;
+  std::vector<std::vector<double>> digi_hit_indices;
   Double_t Digi_numHits;
 
   auto branch_digi_num_hits  = integral_tree.Branch("Digi_numHits", &Digi_numHits, "Digi_numHits/D");
@@ -245,6 +246,7 @@ void track_event_bundle(const script::path_vector& paths,
   auto branch_px = integral_tree.Branch("Digi_px", "std::vector<double>", &digi_hit_px, 32000, 99);
   auto branch_py = integral_tree.Branch("Digi_py", "std::vector<double>", &digi_hit_py, 32000, 99);
   auto branch_pz = integral_tree.Branch("Digi_pz", "std::vector<double>", &digi_hit_pz, 32000, 99);
+  auto branch_indices = integral_tree.Branch("Digi_hitIndices", "std::vector<std::vector<double>>", &digi_hit_indices, 32000, 99);
   //____________________________________________________________________________________________
 
  //___Make Sim Branches_________________________________________________________________________
@@ -436,6 +438,7 @@ void track_event_bundle(const script::path_vector& paths,
     const auto compression_size = event_size / static_cast<type::real>(compressed_event.size());
 
     const auto altered_event = alter_event(compressed_event, options, extension);
+
     const auto event_density = box::geometry::event_density(altered_event);
     box::io::print_event_summary(event_counter, altered_event.size(), compression_size, event_density);
 
@@ -483,11 +486,13 @@ void track_event_bundle(const script::path_vector& paths,
     digi_hit_px.clear();
     digi_hit_py.clear();
     digi_hit_pz.clear();
+    digi_hit_indices.clear();
     for (const auto& h : digitized_full_event) {
         digi_hit_e.push_back(h.e / units::energy);
         digi_hit_px.push_back(h.px / units::momentum);
         digi_hit_py.push_back(h.py / units::momentum);
         digi_hit_pz.push_back(h.pz / units::momentum);
+        digi_hit_indices.push_back(h.sim_indices);
     }
     for (const auto& h : compressed_event) {
         digi_hit_t.push_back(h.t / units::time);
@@ -532,6 +537,7 @@ void track_event_bundle(const script::path_vector& paths,
     unique_detector_count.clear();
 	track_expected_hit_layer.clear();
 	track_missing_hit_layer.clear();
+
     track_t.reserve(tracks.size());
     track_x.reserve(tracks.size());
     track_y.reserve(tracks.size());
@@ -556,7 +562,7 @@ void track_event_bundle(const script::path_vector& paths,
     track_angle_error.reserve(tracks.size());
     unique_detector_count.reserve(tracks.size());
 	track_expected_hit_layer.reserve(tracks.size());
-    track_missing_hit_layer.reserve(tracks.size());
+	track_missing_hit_layer.reserve(tracks.size());
 
     if (event_density >= options.event_density_limit) {
         for (const auto& track : tracks) {
@@ -604,28 +610,52 @@ void track_event_bundle(const script::path_vector& paths,
 					hits_y.push_back(hits.y / units::length);
 				}
 
+				std::vector<double> missing_hit_layer;
+                missing_hit_layer.clear();
+				int missing_hit_counter = 0;
+				missing_hit_layer.reserve(missing_hit_counter);
+
+				std::vector<double> expected_hit_layer;
+                expected_hit_layer.clear();
+                int expected_hit_counter = 0;
+                expected_hit_layer.reserve(expected_hit_counter);
+
+				// std::cout << "//////////////////////////////////////////////" << std::endl;
+				//				std::cout << "digi_event : " << digi_event << std::endl;
+				// std::cout << "compressed_event : " << compressed_event << std::endl;
+				// std::cout << "track.event(): " << track.event() << std::endl;
+
                 for (const auto& determined_y : layer_center) { //per layer
 					if (track.final_fit().vy.value > 0) {
-						const auto point_t = (determined_y - (track.final_fit().y0.value / units::length)) / (track.final_fit().vy.value / units::velocity);
+						const auto point_dt = ((determined_y - (track.final_fit().y0.value / units::length)) / (track.final_fit().vy.value / units::velocity)) + (track.final_fit().t0.value / units::time);
+                        const auto point_t = ((determined_y - (track.final_fit().y0.value / units::length)) / (track.final_fit().vy.value / units::velocity));
 						const auto point_x = (track.final_fit().x0.value / units::length) + (point_t*(track.final_fit().vx.value / units::velocity));
 						const auto point_y = determined_y;
 						const auto point_z = (track.final_fit().z0.value / units::length) + (point_t*(track.final_fit().vz.value / units::velocity));
 						//						std::cout << "determined_y: " << determined_y << " track_y: " << track.final_fit().y0.value/ units::length << " point_t: " << point_t << " point_x: " << point_x << " point_y: " << point_y << " point_z: " << point_z << "\n";
+
+
 						for (auto x_limit : detector_x_limits) {
 							for (auto z_limit : detector_z_limits) {
 								if (point_x < x_limit[1] && point_x > x_limit[0] && point_z < z_limit[1] && point_z > z_limit[0]) { // is there a detector for this point
 									//expected hit in this layer
-									track_expected_hit_layer.push_back(determined_y);
+                                    ++expected_hit_counter;
+									expected_hit_layer.push_back(determined_y);
+									// std::cout << "point_t: " << point_dt << " point_x: " << point_x << " point_y: " << point_y << " point_z: " << point_z << std::endl;
 									if (std::count(hits_y.begin(), hits_y.end(), determined_y)==0) { // if there is no hit in that layer for this track
 										//missing hit
-										track_missing_hit_layer.push_back(determined_y);
+                                        ++missing_hit_counter;
+										missing_hit_layer.push_back(determined_y);
+										// std::cout << "missing in layer: " << determined_y << std::endl;
 									}
 								}
 							}
 						}
-
 					}
                 }
+
+				track_missing_hit_layer.push_back(missing_hit_layer);
+                track_expected_hit_layer.push_back(expected_hit_layer);
 
 			}
 		}

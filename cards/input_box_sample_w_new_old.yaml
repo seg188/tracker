@@ -10,10 +10,10 @@ time-smearing:         true
 positionz-smearing:    true
 simulated-efficiency:  1
 simulated-noise-rate:  0
-event-time-window:     300, 700
+event-time-window:     350, 800
 layer-axis:            Y
-layer-depth:           20
-line-width:            50
+layer-depth:           10
+line-width:            25				
 seed-size:             3
 event-density-limit:   0.00001
 
@@ -21,7 +21,7 @@ event-density-limit:   0.00001
 geometry-file:                demo/box/resources/world.gdml
 geometry-default-time-error:  1.0
 layer-count:                  9
-scintillator_z_width:         450.0 
+scintillator_z_width:         450.0
 scintillator_x_width:         4.5
 scintillator_height:          2.0
 layer_spacing:                100.0
@@ -33,7 +33,7 @@ x_edge_length:                9000.0
 
 # Data Setup
 data-directories: ...
-  - /home/ag1378/cmslink/bobthebuilder/Mu-Simulation/data/20200820/231828/, 0
+  - /home/ag1378/cmslink/bobthebuilder/Mu-Simulation/data/20200724/200719, 0
 
 data-file-extension:       root
 data-position-keys:        Hit_time, Hit_x, Hit_y, Hit_z

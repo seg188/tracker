@@ -248,7 +248,7 @@ const Event positionz_smear(const Event& points) {
 
   util::algorithm::back_insert_transform(points, out, [&](auto hit) {
     using namespace stat;
-	static auto current_error = 15 * units::length;
+	static const auto current_error = 15.0L*units::cm;
 	static random::generator gen(random::normal(0.0L, current_error));
 
 	hit.z += gen;

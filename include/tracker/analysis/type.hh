@@ -50,13 +50,13 @@ using energy_event_vector = std::vector<energy_event>;
 //----------------------------------------------------------------------------------------------
 
 //__Extended Complete Event Types_______________________________________________________________
-struct complete_hit { real t, x, y, z, e, px, py, pz, det_id; };
+struct complete_hit { real t, x, y, z, e, px, py, pz, det_id, index; };
 using complete_event = std::vector<complete_hit>;
 using complete_event_vector = std::vector<complete_event>;
 //----------------------------------------------------------------------------------------------
 
 //__Digi Event Types____________________________________________________________________________
-struct digi_hit { real t, x, y, z, e, px, py, pz; };
+struct digi_hit { real t, x, y, z, e, px, py, pz; std::vector<double> sim_indices; };
 using digi_event = std::vector<digi_hit>;
 using digi_event_vector = std::vector<digi_event>;
 //----------------------------------------------------------------------------------------------
@@ -73,6 +73,19 @@ inline std::ostream& operator<<(std::ostream& os,
                     << point.y / units::length << ", "
                     << point.z / units::length
             << ") +/- " << units::scale_r4_length(point.width) << "]";
+}
+//----------------------------------------------------------------------------------------------
+
+//__For Printing Type std::vector_______________________________________________________________
+inline std::ostream& operator<<(std::ostream& os, const std::vector<double> &v) {
+		os << "[";
+		for (int i = 0; i < v.size(); ++i) {
+			os << v[i];
+			if (i != v.size() - 1)
+				os << ", ";
+		}
+		os << "]\n";
+		return os;
 }
 //----------------------------------------------------------------------------------------------
 
@@ -98,7 +111,8 @@ inline std::ostream& operator<<(std::ostream& os,
 			  << point.px / units::momentum << ", "
 			  << point.py / units::momentum << ", "
 			  << point.pz / units::momentum << ", "
-              << point.det_id
+              << point.det_id << ", "
+              << point.index
 			  << ")";
 }
 //----------------------------------------------------------------------------------------------
@@ -113,7 +127,8 @@ inline std::ostream& operator<<(std::ostream& os,
               << point.e / units::energy   << ", "
 			  << point.px / units::momentum << ", "
 			  << point.py / units::momentum << ", "
-			  << point.pz / units::momentum
+			  << point.pz / units::momentum << ", "
+              << point.sim_indices
 			  << ")";
 }
 //----------------------------------------------------------------------------------------------

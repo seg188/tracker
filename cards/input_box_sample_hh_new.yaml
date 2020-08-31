@@ -33,7 +33,7 @@ x_edge_length:                9000.0
 
 # Data Setup
 data-directories: ...
-  - /home/ag1378/cmslink/bobthebuilder/Mu-Simulation/data/20200813/143631/, 0
+  - /home/ag1378/cmslink/bobthebuilder/Mu-Simulation/data/20200821/010412/, 0
 
 data-file-extension:       root
 data-position-keys:        Hit_time, Hit_x, Hit_y, Hit_z

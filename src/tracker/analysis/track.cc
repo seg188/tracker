@@ -799,9 +799,13 @@ std::size_t track::prune_on_chi_squared(const real max_chi_squared) {
   const auto s = size();
   std::vector<std::size_t> indices;
   indices.reserve(s);
-  for (std::size_t i{}; i < s; ++i)
-    if (chi_squared_vector()[i] > max_chi_squared)
+  for (std::size_t i{}; i < s; ++i) {
+	// std::cout << "Index: " << i << "chi_squared_vector(): " <<  chi_squared_vector()[i] << std::endl;
+    if (chi_squared_vector()[i] > max_chi_squared) {
       indices.push_back(i);
+	  // std::cout << "Pruned: " << i << "\n";
+	}
+  }
   return remove(indices);
 }
 //----------------------------------------------------------------------------------------------
