@@ -29,12 +29,14 @@
 #include "geometry.hh"
 #include "io.hh"
 #include "TTree.h"
-#include <TFile.h>
-#include <vector>
+#include "TFile.h"
+#include "vector"
 
 #ifdef __MAKECINT__
 #pragma link C++ class std::vector<double>+;
 #pragma link C++ class std::vector<std::string>+;
+#pragma link C++ class std::vector<std::int>+;
+#pragma link C++ class std::vector<std::vector<int>>+;
 #endif
 
 
@@ -78,6 +80,7 @@ const analysis::track_vector find_tracks(const analysis::full_event& event,
                                          const std::size_t overlap,
                                          plot::canvas& canvas,
                                          analysis::full_event& non_track_points) {
+
   namespace ash = analysis::seed_heuristic;
   const auto layers = analysis::partition(event, options.layer_axis, options.layer_depth);
   const auto seeds = analysis::seed(
@@ -229,7 +232,7 @@ void track_event_bundle(const script::path_vector& paths,
   std::vector<double> digi_hit_px;
   std::vector<double> digi_hit_py;
   std::vector<double> digi_hit_pz;
-  std::vector<std::string> digi_hit_i;
+  std::vector<std::vector<double>> digi_hit_i;
 
   auto branch_digi_num_hits  = integral_tree.Branch("Digi_numHits", &Digi_numHits, "Digi_numHits/D");
   auto branch_t  = integral_tree.Branch("Digi_time", "std::vector<double>", &digi_hit_t, 32000, 99);
@@ -240,7 +243,7 @@ void track_event_bundle(const script::path_vector& paths,
   auto branch_px = integral_tree.Branch("Digi_px", "std::vector<double>", &digi_hit_px, 32000, 99);
   auto branch_py = integral_tree.Branch("Digi_py", "std::vector<double>", &digi_hit_py, 32000, 99);
   auto branch_pz = integral_tree.Branch("Digi_pz", "std::vector<double>", &digi_hit_pz, 32000, 99);
-  auto branch_indices = integral_tree.Branch("Digi_indices", "std:string", &digi_hit_i);
+  auto branch_indices = integral_tree.Branch("Digi_indices", "std::vector<std::vector<double>>", &digi_hit_i, 32000, 99);
   //____________________________________________________________________________________________
 
  //___Make Sim Branches_________________________________________________________________________
@@ -482,6 +485,8 @@ void track_event_bundle(const script::path_vector& paths,
     digi_hit_py.clear();
     digi_hit_pz.clear();
     digi_hit_i.clear();
+
+
     for (const auto& h : digitized_full_event) {
         digi_hit_e.push_back(h.e / units::energy);
         digi_hit_px.push_back(h.px / units::momentum);
@@ -666,6 +671,7 @@ void track_event_bundle(const script::path_vector& paths,
 	  }
 //______________________________________________________________________________________________
 std::cout << digi_hit_i << '\n';
+
     integral_tree.Fill();
 
     canvas.draw();

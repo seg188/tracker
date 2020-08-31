@@ -56,7 +56,7 @@ using complete_event_vector = std::vector<complete_event>;
 //----------------------------------------------------------------------------------------------
 
 //__Digi Event Types____________________________________________________________________________
-struct digi_hit { real t, x, y, z, e, px, py, pz; std::string i; };
+struct digi_hit { real t, x, y, z, e, px, py, pz; std::vector<double> i; };
 using digi_event = std::vector<digi_hit>;
 using digi_event_vector = std::vector<digi_event>;
 //----------------------------------------------------------------------------------------------
@@ -103,10 +103,24 @@ inline std::ostream& operator<<(std::ostream& os,
 }
 //----------------------------------------------------------------------------------------------
 
+inline std::ostream& operator<<(std::ostream& os,
+                const std::vector<double> &vector) {
+                  for (auto const& i: vector) {
+                    os << i << "," ;
+                }
+
+                return os;
+}
+
 //__Digi Hit Stream Operator Overload___________________________________________________________
 inline std::ostream& operator<<(std::ostream& os,
 								const digi_hit& point) {
-	return os << "(" << point.t / units::time   << ", "
+
+
+
+
+
+	 return os << "(" << point.t / units::time   << ", "
               << point.x / units::length << ", "
               << point.y / units::length << ", "
               << point.z / units::length << ", "
@@ -114,8 +128,9 @@ inline std::ostream& operator<<(std::ostream& os,
 			  << point.px / units::momentum << ", "
 			  << point.py / units::momentum << ", "
 			  << point.pz / units::momentum << ", "
-			  << point.i <<")";
-}
+			  << point.i <<")"; }
+
+
 //----------------------------------------------------------------------------------------------
 
 //__Energy Event Stream Operator Overload_______________________________________________________

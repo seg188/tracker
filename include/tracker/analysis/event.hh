@@ -84,10 +84,10 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
 	 complete_event c_out = complete_points;
 
 	const auto size = c_out.size();
-	std::cout << size << "size" << '\n';
+
 
   complete_event c_time_sorted = t_sort(c_out);
-  std::cout << "CCCCCCCCCCCCCCCCCCCC: " << c_time_sorted;
+//  std::cout << "CCCCCCCCCCCCCCCCCCCC: " << c_time_sorted;
 
   std::vector<long double> detector_ids;
   detector_ids.reserve(c_time_sorted.size());
@@ -112,9 +112,8 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
 	  long double weighted_py = 0;
 	  long double weighted_pz = 0;
 	  long double point_x = 0;
-      long double point_y = 0;
-			std::vector<long double> indices ;
-		std::string indices_str;
+    long double point_y = 0;
+		std::vector<double> indices;
 
 
 	  int counter = 0;
@@ -132,7 +131,7 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
 	  pys.reserve(counter);
 	  std::vector<long double> pzs;
 	  pzs.reserve(counter);
-		std::vector<long double> is;
+		std::vector<double> is;
 		is.reserve(counter);
 
 	  std::vector<long double> deposits;
@@ -147,7 +146,7 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
 			  			pxs.push_back(h.px);
 			  			pys.push_back(h.py);
 			  			pzs.push_back(h.pz);
-							is.push_back(h.index);
+							is.push_back((int)h.index);
               deposits.push_back(h.e);
 			  ++counter;
 		  }
@@ -164,7 +163,7 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
 				  std::vector<long double> px_components;
 				  std::vector<long double> py_components;
 				  std::vector<long double> pz_components;
-					std::vector<long double> index_components;
+					std::vector<double> index_components;
 
 				  for (int i = 0; i < times.size(); i++) {
 					  if (times[i] < (t0 + spacing)) {
@@ -191,6 +190,10 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
 					  weighted_py = py_sum;
 					  weighted_pz = pz_sum;
 						indices = index_components;
+				//		std::cout << "wwwwwwwwwwwwwwww:" << indices << '\n';
+						//
+						// indices_vector.push_back(index_components);
+						// std::cout << "/* message */" << indices_vector << '\n';
 
                       starting_index += e_components.size();
 				  } else {
@@ -206,22 +209,23 @@ const digi_event full_digi_event(const event& points, const energy_event& energy
 
 		  }
 
-			std::stringstream indices_ss ;
-			for(size_t i = 0; i < indices.size(); ++i){
-			   	if(i != 0)
-    			indices_ss << ",";
-  				indices_ss << indices[i];
-					}
-			indices_str = indices_ss.str();
+			// std::stringstream indices_ss ;
+			// for(size_t i = 0; i < indices.size(); ++i){
+			//    	if(i != 0)
+    	// 		indices_ss << ",";
+  		// 		indices_ss << indices[i];
+			// 		}
+			// indices_str = indices_ss.str();
+			//
 
 	  if (energy_sum>0){
 		full_digi_out.push_back({weighted_time/energy_sum * units::time, (point_x/10) * units::length, (point_y/10) * units::length, ((weighted_z/energy_sum)/10) * units::length,
-	                      	     energy_sum * units::energy, ((weighted_px/energy_sum)) * units::momentum, ((weighted_py/energy_sum)) * units::momentum, ((weighted_pz/energy_sum)) * units::momentum, indices_str});
+	                      	     energy_sum * units::energy, ((weighted_px/energy_sum)) * units::momentum, ((weighted_py/energy_sum)) * units::momentum, ((weighted_pz/energy_sum)) * units::momentum, indices});
 	  }
 
   }
 
-  std::cout << "SSSSSSSSSSSSS: " << full_digi_out <<std::endl;
+// std::cout << "SSSSSSSSSSSSS: " << full_digi_out <<std::endl;
   return full_digi_out;
 }
 
